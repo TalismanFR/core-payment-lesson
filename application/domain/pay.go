@@ -1,20 +1,31 @@
 package domain
 
 import (
+	"diLesson/application/domain/vo"
 	"diLesson/payment/contract/dto"
-	uuid "github.com/satori/go.uuid"
+	"github.com/google/uuid"
 	"time"
 )
 
+type statusCode int
+
+const (
+	StatusCodeOK = statusCode(0)
+)
+
 type Pay struct {
-	uuid        uuid.UUID
-	amount      int
-	currency    string //todo to struc
-	invoiceId   string
-	statusCode  int //todo to struct
-	status      string
-	createdAt   time.Time
-	transaction string
+	uuid          uuid.UUID
+	amount        vo.Amount
+	currency      vo.Currency
+	invoiceId     string
+	statusCode    statusCode
+	status        string
+	createdAt     time.Time
+	transactionId string
+}
+
+func NewPay(uuid uuid.UUID, amount vo.Amount, currency vo.Currency, invoiceId string, statusCode statusCode, status string, createdAt time.Time, transactionId string) *Pay {
+	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, statusCode: statusCode, status: status, createdAt: createdAt, transactionId: transactionId}
 }
 
 func (p *Pay) HandleChargeResult(result *dto.VendorChargeResult) {
@@ -26,11 +37,11 @@ func (p Pay) Uuid() uuid.UUID {
 	return p.uuid
 }
 
-func (p Pay) Amount() int {
+func (p Pay) Amount() vo.Amount {
 	return p.amount
 }
 
-func (p Pay) Currency() string {
+func (p Pay) Currency() vo.Currency {
 	return p.currency
 }
 
@@ -39,7 +50,7 @@ func (p Pay) InvoiceId() string {
 }
 
 func (p Pay) StatusCode() int {
-	return p.statusCode
+	return int(p.statusCode)
 }
 
 func (p Pay) Status() string {
@@ -50,10 +61,6 @@ func (p Pay) CreatedAt() time.Time {
 	return p.createdAt
 }
 
-func (p Pay) Transaction() string {
-	return p.transaction
-}
-
-func NewPay(uuid uuid.UUID, amount int, currency string, invoiceId string, statusCode int, status string, createdAt time.Time, transaction string) *Pay {
-	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, statusCode: statusCode, status: status, createdAt: createdAt, transaction: transaction}
+func (p Pay) TransactionId() string {
+	return p.transactionId
 }

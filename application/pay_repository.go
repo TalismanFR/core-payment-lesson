@@ -1,9 +1,12 @@
 package application
 
-import "diLesson/application/domain"
+import (
+	"context"
+	"diLesson/application/domain"
+)
 
 type PayRepository interface {
-	Save(pay *domain.Pay) error
-	Update(pay *domain.Pay) error
-	FindByInvoiceID(invoiceId string) (*domain.Pay, error)
+	Save(ctx context.Context, pay *domain.Pay) error
+	Update(ctx context.Context, pay *domain.Pay) error
+	FindByInvoiceID(ctx context.Context, invoiceId string) (*domain.Pay, error)
 }

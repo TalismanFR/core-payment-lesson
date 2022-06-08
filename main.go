@@ -28,7 +28,7 @@ func main() {
 
 	requestDto := dto.ChargeRequest{
 		Amount:      1000,
-		TerminalId:  "1234",
+		TerminalId:  "terminalId2",
 		InvoiceId:   "1_test",
 		Description: "",
 	}
