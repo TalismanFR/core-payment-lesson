@@ -3,23 +3,112 @@ package repository
 import (
 	"context"
 	"diLesson/application/domain"
+	"diLesson/application/domain/vo"
 	"fmt"
+	"github.com/google/uuid"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"time"
 )
 
+type Pay struct {
+	Uuid          uuid.UUID `gorm:"primaryKey"`
+	Amount        int
+	Currency      string
+	InvoiceId     string
+	StatusCode    int
+	Status        string
+	CreatedAt     time.Time
+	TransactionId string
+}
+
 type PayRepositoryPgsql struct {
+	db *gorm.DB
 }
 
-func (p PayRepositoryPgsql) Save(ctx context.Context, pay *domain.Pay) error {
-	fmt.Println("saved to db: " + pay.Uuid().String())
-	return nil
+func NewPayRepositoryPgsql(dsn string) (*PayRepositoryPgsql, error) {
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+	err = db.AutoMigrate(&Pay{})
+	if err != nil {
+		return nil, err
+	}
+
+	return &PayRepositoryPgsql{db}, nil
 }
 
-func (p PayRepositoryPgsql) Update(ctx context.Context, pay *domain.Pay) error {
-	//TODO implement me
-	panic("implement me")
+func (repo *PayRepositoryPgsql) Save(ctx context.Context, pay *domain.Pay) error {
+	tx := repo.db.WithContext(ctx)
+	r := tx.Create(payFromDomainPay(pay))
+
+	return r.Error
 }
 
-func (p PayRepositoryPgsql) FindByInvoiceID(ctx context.Context, invoiceId string) (*domain.Pay, error) {
-	//TODO implement me
-	panic("implement me")
+func (repo *PayRepositoryPgsql) Update(ctx context.Context, pay *domain.Pay) error {
+	tx := repo.db.WithContext(ctx)
+
+	p := payFromDomainPay(pay)
+
+	r := tx.First(&Pay{Uuid: pay.Uuid()}).Updates(p)
+
+	if r.RowsAffected == 0 {
+		return fmt.Errorf("no record with UUID: %v", p.Uuid)
+	}
+
+	return r.Error
+}
+
+func (repo *PayRepositoryPgsql) FindByInvoiceID(ctx context.Context, invoiceId string) (*domain.Pay, error) {
+
+	if invoiceId == "" {
+		return nil, fmt.Errorf("empty invoiceId")
+	}
+
+	tx := repo.db.WithContext(ctx)
+
+	var pay *Pay
+
+	r := tx.First(pay, "invoiceId = ?", invoiceId)
+
+	if r.RowsAffected == 0 {
+		return nil, fmt.Errorf("no records with such InvoiceId")
+	}
+
+	return domainPayFromPay(pay), nil
+}
+
+func payFromDomainPay(pay *domain.Pay) *Pay {
+	return &Pay{
+		pay.Uuid(),
+		int(pay.Amount()),
+		string(pay.Currency()),
+		pay.InvoiceId(),
+		pay.StatusCode(),
+		pay.Status(),
+		pay.CreatedAt(),
+		pay.TransactionId(),
+	}
+}
+
+func domainPayFromPay(pay *Pay) *domain.Pay {
+
+	code := domain.StatusCodeOK
+
+	switch pay.StatusCode {
+	case int(domain.StatusCodeOK):
+		code = domain.StatusCodeOK
+	}
+
+	return domain.NewPay(
+		pay.Uuid,
+		vo.Amount(pay.Amount),
+		vo.Currency(pay.Currency),
+		pay.InvoiceId,
+		code,
+		pay.Status,
+		pay.CreatedAt,
+		pay.TransactionId,
+	)
 }

@@ -6,14 +6,14 @@ import (
 	"diLesson/application/contract/dto"
 	"diLesson/application/domain"
 	"diLesson/application/domain/vo"
-	contract2 "diLesson/payment/contract"
+	"diLesson/payment/contract"
 	"fmt"
 	"github.com/golobby/container/v3"
 	"github.com/google/uuid"
 	"time"
 )
 
-//func Init() {
+//func init() {
 //	if err := config.BuildDI(); err != nil {
 //		panic(fmt.Sprintf("couldn't build dependencies for the application: %v", err))
 //	}
@@ -22,6 +22,10 @@ import (
 type Charge struct {
 	payRepo      application.PayRepository `container:"type"`
 	terminalRepo application.TerminalRepo  `container:"type"`
+}
+
+func (c Charge) Update(id uuid.UUID, request dto.ChargeRequest) error {
+	return c.payRepo.Update(context.Background(), domain.NewPay(id, vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), "transactionId"))
 }
 
 func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
@@ -40,10 +44,10 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 		return nil, err
 	}
 
-	var service contract2.VendorCharge
-	container.NamedResolve(&service, a)
+	var vendor contract.VendorCharge
+	container.NamedResolve(&vendor, a)
 
-	result, err := service.Charge(pay)
+	result, err := vendor.Charge(pay)
 	if err != nil {
 		return nil, err
 	}

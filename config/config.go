@@ -13,8 +13,10 @@ import (
 )
 
 func BuildDI() (err error) {
-	err = container.Transient(func() application.PayRepository {
-		return &repository.PayRepositoryPgsql{}
+	err = container.Transient(func() (application.PayRepository, error) {
+		dsn := "host=localhost user=payservice password=payservice dbname=payservice-db port=5432 sslmode=disable"
+
+		return repository.NewPayRepositoryPgsql(dsn)
 	})
 
 	err = container.NamedTransient("bepaid", func() (contract2.VendorCharge, error) {
