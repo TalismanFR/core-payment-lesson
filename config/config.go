@@ -3,6 +3,7 @@ package config
 import (
 	"diLesson/application"
 	"diLesson/application/contract"
+	"diLesson/application/domain/vo"
 	"diLesson/application/service"
 	"diLesson/infrastructure/repository"
 	"diLesson/infrastructure/terminal"
@@ -10,6 +11,7 @@ import (
 	contract2 "diLesson/payment/contract"
 	"diLesson/payment/tinkoff"
 	"github.com/golobby/container/v3"
+	"github.com/google/uuid"
 )
 
 func BuildDI() (err error) {
@@ -32,10 +34,9 @@ func BuildDI() (err error) {
 	})
 
 	err = container.Transient(func() application.TerminalRepo {
-		terminals := map[string]string{
-			"terminalId1": "bepaid",
-			"terminalId2": "tinkoff",
-			"terminalId3": "bepaid",
+		terminals := map[string]*vo.Terminal{
+			"8242df35-e182-4448-a99d-fd6b86dd7312": vo.NewTerminal(uuid.MustParse("8242df35-e182-4448-a99d-fd6b86dd7312"), "bepaid",
+				map[string]string{"login": "login", "password": "password"}),
 		}
 
 		return terminal.NewTerminalRepoInMemory(terminals)

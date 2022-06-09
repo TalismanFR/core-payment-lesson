@@ -113,11 +113,11 @@ func payFromDomainPay(pay *domain.Pay) *Pay {
 
 func domainPayFromPay(pay *Pay) *domain.Pay {
 
-	code := domain.StatusCodeOK
+	code := domain.StatusNew
 
 	switch pay.StatusCode {
-	case int(domain.StatusCodeOK):
-		code = domain.StatusCodeOK
+	case int(domain.StatusNew):
+		code = domain.StatusNew
 	}
 
 	p, _ := domain.NewPay(

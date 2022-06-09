@@ -4,8 +4,12 @@ type ChargeResult struct {
 	status     int
 	statusName string
 	uuid       string
+	threeDs    *struct{}
 }
 
+func (c ChargeResult) need3ds() bool {
+	return c.threeDs != nil
+}
 func (c ChargeResult) Status() int {
 	return c.status
 }

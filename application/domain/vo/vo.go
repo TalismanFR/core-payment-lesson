@@ -14,6 +14,6 @@ const (
 type Status string
 
 const (
-	StatusSuccessful = "successful"
-	StatusNew        = "new"
+	StatusSuccessful = "SUCCESSFUL"
+	StatusNew        = "NEW"
 )
