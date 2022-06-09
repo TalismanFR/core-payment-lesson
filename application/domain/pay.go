@@ -3,6 +3,7 @@ package domain
 import (
 	"diLesson/application/domain/vo"
 	"diLesson/payment/contract/dto"
+	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
@@ -24,8 +25,11 @@ type Pay struct {
 	transactionId string
 }
 
-func NewPay(uuid uuid.UUID, amount vo.Amount, currency vo.Currency, invoiceId string, statusCode statusCode, status string, createdAt time.Time, transactionId string) *Pay {
-	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, statusCode: statusCode, status: status, createdAt: createdAt, transactionId: transactionId}
+func NewPay(uuid uuid.UUID, amount vo.Amount, currency vo.Currency, invoiceId string, statusCode statusCode, status string, createdAt time.Time, transactionId string) (*Pay, error) {
+	if invoiceId == "" || status == "" || transactionId == "" {
+		return nil, fmt.Errorf("invalid arguments: empty string")
+	}
+	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, statusCode: statusCode, status: status, createdAt: createdAt, transactionId: transactionId}, nil
 }
 
 func (p *Pay) HandleChargeResult(result *dto.VendorChargeResult) {

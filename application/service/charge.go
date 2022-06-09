@@ -25,19 +25,26 @@ type Charge struct {
 }
 
 func (c Charge) Update(id uuid.UUID, request dto.ChargeRequest) error {
-	return c.payRepo.Update(context.Background(), domain.NewPay(id, vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), "transactionId"))
+	p, err := domain.NewPay(id, vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), "transactionId")
+	if err != nil {
+		return err
+	}
+	return c.payRepo.Update(context.Background(), p)
 }
 
 func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
-	if request.Amount < 0 {
-		return nil, fmt.Errorf("amount value less than zero")
+	if err := request.Valid(); err != nil {
+		return nil, fmt.Errorf("request is invalid: %w", err)
 	}
 
 	// TODO: when to generate and when to acquire transactionId
 	transactionId := ""
 
-	pay := domain.NewPay(uuid.New(), vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), transactionId)
+	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), transactionId)
+	if err != nil {
+		return nil, err
+	}
 
 	a, err := c.terminalRepo.GetAlias(request.TerminalId)
 	if err != nil {

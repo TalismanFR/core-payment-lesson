@@ -72,8 +72,27 @@ func (repo *PayRepositoryPgsql) FindByInvoiceID(ctx context.Context, invoiceId s
 
 	r := tx.First(pay, "invoiceId = ?", invoiceId)
 
-	if r.RowsAffected == 0 {
-		return nil, fmt.Errorf("no records with such InvoiceId")
+	if r.Error != nil {
+		return nil, r.Error
+	}
+
+	return domainPayFromPay(pay), nil
+}
+
+func (repo *PayRepositoryPgsql) FindByUuid(ctx context.Context, uuid uuid.UUID) (*domain.Pay, error) {
+
+	if uuid.String() == "" {
+		return nil, fmt.Errorf("uuid with zero length")
+	}
+
+	tx := repo.db.WithContext(ctx)
+
+	var pay *Pay
+
+	r := tx.First(pay, "id = ?", uuid.String())
+
+	if r.Error != nil {
+		return nil, r.Error
 	}
 
 	return domainPayFromPay(pay), nil
@@ -101,7 +120,7 @@ func domainPayFromPay(pay *Pay) *domain.Pay {
 		code = domain.StatusCodeOK
 	}
 
-	return domain.NewPay(
+	p, _ := domain.NewPay(
 		pay.Uuid,
 		vo.Amount(pay.Amount),
 		vo.Currency(pay.Currency),
@@ -111,4 +130,6 @@ func domainPayFromPay(pay *Pay) *domain.Pay {
 		pay.CreatedAt,
 		pay.TransactionId,
 	)
+
+	return p
 }
