@@ -3,6 +3,7 @@ module diLesson
 go 1.17
 
 require (
+	github.com/TalismanFR/bepaid v0.0.0-20220611204139-eab2143a1bea
 	github.com/golobby/container/v3 v3.2.1
 	github.com/google/uuid v1.3.0
 	gorm.io/driver/postgres v1.3.7

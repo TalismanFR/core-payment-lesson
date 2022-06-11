@@ -126,12 +126,12 @@ func payFromDomainPay(pay *domain.Pay) *Pay {
 
 func domainPayFromPay(pay *Pay) (*domain.Pay, error) {
 
-	s, err := status.FromString(pay.Status)
+	stat, err := status.FromString(pay.Status)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := currency.FromString(pay.Currency)
+	cur, err := currency.FromString(pay.Currency)
 	if err != nil {
 		return nil, err
 	}
@@ -144,12 +144,14 @@ func domainPayFromPay(pay *Pay) (*domain.Pay, error) {
 	p, _ := domain.PayFull(
 		pay.Uuid,
 		vo.Amount(pay.Amount),
-		c,
+		cur,
+		"empty description",
 		pay.InvoiceId,
-		s,
+		stat,
 		pay.CreatedAt,
 		pay.TransactionId,
 		vo.NewTerminal(terminalUuid, "", nil),
+		nil,
 	)
 
 	return p, nil

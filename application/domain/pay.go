@@ -14,23 +14,36 @@ type Pay struct {
 	uuid          uuid.UUID
 	amount        vo.Amount
 	currency      currency.Currency
+	description   string
 	invoiceId     string
 	status        status.Status
 	createdAt     time.Time
 	transactionId string
 	terminal      *vo.Terminal
+	creditCard    *vo.CreditCard
 }
 
-func NewPay(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, invoiceId string, terminal *vo.Terminal) (*Pay, error) {
+func NewPay(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, description string, invoiceId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
 	if currency.String() == "" || invoiceId == "" {
 		return nil, fmt.Errorf("invalid arguments: empty string")
 	}
-	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, status: status.StatusNew, createdAt: time.Now(), transactionId: "", terminal: terminal}, nil
+	return &Pay{
+		uuid:          uuid,
+		amount:        amount,
+		currency:      currency,
+		description:   description,
+		invoiceId:     invoiceId,
+		status:        status.StatusNew,
+		createdAt:     time.Now(),
+		transactionId: "",
+		terminal:      terminal,
+		creditCard:    cc,
+	}, nil
 }
 
-func PayFull(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, invoiceId string, status status.Status, createdAt time.Time, transactionId string, terminal *vo.Terminal) (*Pay, error) {
+func PayFull(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, description string, invoiceId string, status status.Status, createdAt time.Time, transactionId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
 
-	p, err := NewPay(uuid, amount, currency, invoiceId, terminal)
+	p, err := NewPay(uuid, amount, currency, description, invoiceId, terminal, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +72,10 @@ func (p Pay) Currency() currency.Currency {
 	return p.currency
 }
 
+func (p Pay) Description() string {
+	return p.description
+}
+
 func (p Pay) InvoiceId() string {
 	return p.invoiceId
 }
@@ -85,4 +102,8 @@ func (p *Pay) IsStatusPending() bool {
 
 func (p *Pay) Terminal() *vo.Terminal {
 	return p.terminal
+}
+
+func (p *Pay) CreditCard() *vo.CreditCard {
+	return p.creditCard
 }

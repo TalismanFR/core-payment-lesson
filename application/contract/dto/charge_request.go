@@ -1,6 +1,9 @@
 package dto
 
-import "fmt"
+import (
+	"diLesson/application/domain/vo"
+	"fmt"
+)
 
 type ChargeRequest struct {
 	Amount      int
@@ -8,9 +11,13 @@ type ChargeRequest struct {
 	TerminalId  string
 	InvoiceId   string
 	Description string
+	CreditCard  *vo.CreditCard
 }
 
 func (c ChargeRequest) Valid() error {
+	if err := c.CreditCard.Validate(); err != nil {
+		return fmt.Errorf("credir card is invalid: %w", err)
+	}
 	if c.Amount < 0 {
 		return fmt.Errorf("amount less than zero")
 	}

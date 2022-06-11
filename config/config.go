@@ -22,9 +22,9 @@ func BuildDI() (err error) {
 	})
 
 	err = container.NamedTransient("bepaid_charge", func() (contract2.VendorCharge, error) {
-		s := bepaid.Charge{}
+		s := bepaid.NewCharge("bepaid")
 
-		return &s, nil
+		return s, nil
 	})
 
 	err = container.NamedTransient("tinkoff_charge", func() (contract2.VendorCharge, error) {

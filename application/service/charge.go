@@ -55,7 +55,7 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
 	terminal, err := c.terminalRepo.FindByUuid(uuidTerminal)
 
-	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), cur, request.InvoiceId, terminal)
+	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), cur, request.Description, request.InvoiceId, terminal, request.CreditCard)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +75,8 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 		return nil, err
 	}
 
-	r := dto.NewChargeResult(0, "success", pay.Uuid().String())
+	threeDS := &dto.ThreeDs{Status: dto.UnknownThreeDsStatus, RedirectUrl: result.ThreeDs().RedirectUrl}
+
+	r := dto.NewChargeResult(pay.Status().Code(), pay.Status().Description(), pay.Uuid().String(), result.ReceiptUrl(), result.Message(), threeDS)
 	return r, nil
 }
