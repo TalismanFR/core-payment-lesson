@@ -1,5 +1,10 @@
 package contract
 
+import (
+	"diLesson/application/domain"
+	"diLesson/payment/contract/dto"
+)
+
 type VendorRefund interface {
-	Refund()
+	Refund(pay *domain.Pay) (*dto.VendorRefundResult, error)
 }

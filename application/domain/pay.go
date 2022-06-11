@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"diLesson/application/domain/currency"
+	"diLesson/application/domain/status"
 	"diLesson/application/domain/vo"
 	"diLesson/payment/contract/dto"
 	"fmt"
@@ -8,30 +10,36 @@ import (
 	"time"
 )
 
-type statusCode int
-
-const (
-	StatusNew     = statusCode(0)
-	StatusPending = statusCode(1)
-)
-
 type Pay struct {
 	uuid          uuid.UUID
 	amount        vo.Amount
-	currency      vo.Currency
+	currency      currency.Currency
 	invoiceId     string
-	statusCode    statusCode
-	status        string
+	status        status.Status
 	createdAt     time.Time
 	transactionId string
 	terminal      *vo.Terminal
 }
 
-func NewPay(uuid uuid.UUID, amount vo.Amount, currency vo.Currency, invoiceId string, statusCode statusCode, status string, createdAt time.Time, transactionId string, terminal *vo.Terminal) (*Pay, error) {
-	if invoiceId == "" || status == "" || transactionId == "" {
+func NewPay(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, invoiceId string, terminal *vo.Terminal) (*Pay, error) {
+	if currency.String() == "" || invoiceId == "" {
 		return nil, fmt.Errorf("invalid arguments: empty string")
 	}
-	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, statusCode: statusCode, status: status, createdAt: createdAt, transactionId: transactionId, terminal: terminal}, nil
+	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, status: status.StatusNew, createdAt: time.Now(), transactionId: "", terminal: terminal}, nil
+}
+
+func PayFull(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, invoiceId string, status status.Status, createdAt time.Time, transactionId string, terminal *vo.Terminal) (*Pay, error) {
+
+	p, err := NewPay(uuid, amount, currency, invoiceId, terminal)
+	if err != nil {
+		return nil, err
+	}
+
+	p.status = status
+	p.createdAt = createdAt
+	p.transactionId = transactionId
+
+	return p, nil
 }
 
 func (p *Pay) HandleChargeResult(result *dto.VendorChargeResult) {
@@ -47,7 +55,7 @@ func (p Pay) Amount() vo.Amount {
 	return p.amount
 }
 
-func (p Pay) Currency() vo.Currency {
+func (p Pay) Currency() currency.Currency {
 	return p.currency
 }
 
@@ -55,11 +63,7 @@ func (p Pay) InvoiceId() string {
 	return p.invoiceId
 }
 
-func (p Pay) StatusCode() int {
-	return int(p.statusCode)
-}
-
-func (p Pay) Status() string {
+func (p Pay) Status() status.Status {
 	return p.status
 }
 
@@ -72,11 +76,11 @@ func (p Pay) TransactionId() string {
 }
 
 func (p *Pay) IsStatusNew() bool {
-	return p.statusCode == StatusNew
+	return p.status == status.StatusNew
 }
 
 func (p *Pay) IsStatusPending() bool {
-	return p.statusCode == StatusPending
+	return p.status == status.StatusPending
 }
 
 func (p *Pay) Terminal() *vo.Terminal {

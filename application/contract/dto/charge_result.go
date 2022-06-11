@@ -34,5 +34,5 @@ type ThreeDs struct {
 type ThreeDsStatus string
 
 const (
-	ThreeDsStatusIncomplete ThreeDsStatus = "imcomplete"
+	ThreeDsStatusIncomplete ThreeDsStatus = "incomplete"
 )

@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"diLesson/application/domain"
+	"diLesson/application/domain/currency"
+	"diLesson/application/domain/status"
 	"diLesson/application/domain/vo"
 	"fmt"
 	"github.com/google/uuid"
@@ -13,10 +15,9 @@ import (
 
 type Pay struct {
 	Uuid          uuid.UUID `gorm:"primaryKey"`
-	Amount        int
+	Amount        uint64
 	Currency      string
 	InvoiceId     string
-	StatusCode    int
 	Status        string
 	CreatedAt     time.Time
 	TransactionId string
@@ -113,11 +114,10 @@ func (repo *PayRepositoryPgsql) FindByUuid(ctx context.Context, uuid uuid.UUID) 
 func payFromDomainPay(pay *domain.Pay) *Pay {
 	return &Pay{
 		pay.Uuid(),
-		int(pay.Amount()),
-		string(pay.Currency()),
+		uint64(pay.Amount()),
+		pay.Currency().String(),
 		pay.InvoiceId(),
-		pay.StatusCode(),
-		pay.Status(),
+		pay.Status().Description(),
 		pay.CreatedAt(),
 		pay.TransactionId(),
 		pay.Terminal().Uuid().String(),
@@ -126,13 +126,14 @@ func payFromDomainPay(pay *domain.Pay) *Pay {
 
 func domainPayFromPay(pay *Pay) (*domain.Pay, error) {
 
-	code := domain.StatusNew
+	s, err := status.FromString(pay.Status)
+	if err != nil {
+		return nil, err
+	}
 
-	switch pay.StatusCode {
-	case int(domain.StatusNew):
-		code = domain.StatusNew
-	case int(domain.StatusPending):
-		code = domain.StatusPending
+	c, err := currency.FromString(pay.Currency)
+	if err != nil {
+		return nil, err
 	}
 
 	terminalUuid, err := uuid.Parse(pay.TerminalId)
@@ -140,13 +141,12 @@ func domainPayFromPay(pay *Pay) (*domain.Pay, error) {
 		return nil, err
 	}
 
-	p, _ := domain.NewPay(
+	p, _ := domain.PayFull(
 		pay.Uuid,
 		vo.Amount(pay.Amount),
-		vo.Currency(pay.Currency),
+		c,
 		pay.InvoiceId,
-		code,
-		pay.Status,
+		s,
 		pay.CreatedAt,
 		pay.TransactionId,
 		vo.NewTerminal(terminalUuid, "", nil),

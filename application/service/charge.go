@@ -5,12 +5,16 @@ import (
 	"diLesson/application"
 	"diLesson/application/contract/dto"
 	"diLesson/application/domain"
+	"diLesson/application/domain/currency"
 	"diLesson/application/domain/vo"
 	"diLesson/payment/contract"
 	"fmt"
 	"github.com/golobby/container/v3"
 	"github.com/google/uuid"
-	"time"
+)
+
+const (
+	chargeSuffix = "_charge"
 )
 
 //func init() {
@@ -35,25 +39,29 @@ type Charge struct {
 func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
 	if err := request.Valid(); err != nil {
-		return nil, fmt.Errorf("request is invalid: %w", err)
+		return nil, fmt.Errorf("invalid request: %w", err)
+	}
+
+	cur, err := currency.FromString(request.Currency)
+	if err != nil {
+		return nil, fmt.Errorf("invalid requst: %w", err)
 	}
 
 	// TODO: when to generate and when to acquire transactionId
-	transactionId := ""
 	uuidTerminal, err := uuid.Parse(request.TerminalId)
 	if err != nil {
 		return nil, err
 	}
 
-	a, err := c.terminalRepo.FindByUuid(uuidTerminal)
+	terminal, err := c.terminalRepo.FindByUuid(uuidTerminal)
 
-	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusNew, vo.StatusNew, time.Now(), transactionId, a)
+	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), cur, request.InvoiceId, terminal)
 	if err != nil {
 		return nil, err
 	}
 
 	var vendor contract.VendorCharge
-	err = container.NamedResolve(&vendor, a.Alias()+"_charge")
+	err = container.NamedResolve(&vendor, terminal.Alias()+chargeSuffix)
 
 	result, err := vendor.Charge(pay)
 	if err != nil {
@@ -62,7 +70,10 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
 	pay.HandleChargeResult(result)
 
-	c.payRepo.Save(context.Background(), pay)
+	err = c.payRepo.Save(context.Background(), pay)
+	if err != nil {
+		return nil, err
+	}
 
 	r := dto.NewChargeResult(0, "success", pay.Uuid().String())
 	return r, nil
