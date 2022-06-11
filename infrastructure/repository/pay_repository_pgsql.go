@@ -20,6 +20,7 @@ type Pay struct {
 	Status        string
 	CreatedAt     time.Time
 	TransactionId string
+	TerminalId    string
 }
 
 type PayRepositoryPgsql struct {
@@ -76,7 +77,12 @@ func (repo *PayRepositoryPgsql) FindByInvoiceID(ctx context.Context, invoiceId s
 		return nil, r.Error
 	}
 
-	return domainPayFromPay(pay), nil
+	p, err := domainPayFromPay(pay)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create domain.Pay from Pay: %w", err)
+	}
+
+	return p, nil
 }
 
 func (repo *PayRepositoryPgsql) FindByUuid(ctx context.Context, uuid uuid.UUID) (*domain.Pay, error) {
@@ -95,7 +101,13 @@ func (repo *PayRepositoryPgsql) FindByUuid(ctx context.Context, uuid uuid.UUID) 
 		return nil, r.Error
 	}
 
-	return domainPayFromPay(pay), nil
+	p, err := domainPayFromPay(pay)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create domain.Pay from Pay: %w", err)
+	}
+
+	return p, nil
+
 }
 
 func payFromDomainPay(pay *domain.Pay) *Pay {
@@ -108,16 +120,24 @@ func payFromDomainPay(pay *domain.Pay) *Pay {
 		pay.Status(),
 		pay.CreatedAt(),
 		pay.TransactionId(),
+		pay.Terminal().Uuid().String(),
 	}
 }
 
-func domainPayFromPay(pay *Pay) *domain.Pay {
+func domainPayFromPay(pay *Pay) (*domain.Pay, error) {
 
-	code := domain.StatusCodeOK
+	code := domain.StatusNew
 
 	switch pay.StatusCode {
-	case int(domain.StatusCodeOK):
-		code = domain.StatusCodeOK
+	case int(domain.StatusNew):
+		code = domain.StatusNew
+	case int(domain.StatusPending):
+		code = domain.StatusPending
+	}
+
+	terminalUuid, err := uuid.Parse(pay.TerminalId)
+	if err != nil {
+		return nil, err
 	}
 
 	p, _ := domain.NewPay(
@@ -129,7 +149,8 @@ func domainPayFromPay(pay *Pay) *domain.Pay {
 		pay.Status,
 		pay.CreatedAt,
 		pay.TransactionId,
+		vo.NewTerminal(terminalUuid, "", nil),
 	)
 
-	return p
+	return p, nil
 }

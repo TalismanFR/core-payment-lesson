@@ -24,13 +24,13 @@ type Charge struct {
 	terminalRepo application.TerminalRepo  `container:"type"`
 }
 
-func (c Charge) Update(id uuid.UUID, request dto.ChargeRequest) error {
-	p, err := domain.NewPay(id, vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), "transactionId")
-	if err != nil {
-		return err
-	}
-	return c.payRepo.Update(context.Background(), p)
-}
+//func (c Charge) Update(id uuid.UUID, request dto.ChargeRequest) error {
+//	p, err := domain.NewPay(id, vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), "transactionId")
+//	if err != nil {
+//		return err
+//	}
+//	return c.payRepo.Update(context.Background(), p)
+//}
 
 func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
@@ -40,19 +40,20 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
 	// TODO: when to generate and when to acquire transactionId
 	transactionId := ""
-
-	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), transactionId)
+	uuidTerminal, err := uuid.Parse(request.TerminalId)
 	if err != nil {
 		return nil, err
 	}
 
-	a, err := c.terminalRepo.GetAlias(request.TerminalId)
+	a, err := c.terminalRepo.FindByUuid(uuidTerminal)
+
+	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusNew, vo.StatusNew, time.Now(), transactionId, a)
 	if err != nil {
 		return nil, err
 	}
 
 	var vendor contract.VendorCharge
-	container.NamedResolve(&vendor, a)
+	err = container.NamedResolve(&vendor, a.Alias()+"_charge")
 
 	result, err := vendor.Charge(pay)
 	if err != nil {

@@ -11,7 +11,8 @@ import (
 type statusCode int
 
 const (
-	StatusCodeOK = statusCode(0)
+	StatusNew     = statusCode(0)
+	StatusPending = statusCode(1)
 )
 
 type Pay struct {
@@ -23,13 +24,14 @@ type Pay struct {
 	status        string
 	createdAt     time.Time
 	transactionId string
+	terminal      *vo.Terminal
 }
 
-func NewPay(uuid uuid.UUID, amount vo.Amount, currency vo.Currency, invoiceId string, statusCode statusCode, status string, createdAt time.Time, transactionId string) (*Pay, error) {
+func NewPay(uuid uuid.UUID, amount vo.Amount, currency vo.Currency, invoiceId string, statusCode statusCode, status string, createdAt time.Time, transactionId string, terminal *vo.Terminal) (*Pay, error) {
 	if invoiceId == "" || status == "" || transactionId == "" {
 		return nil, fmt.Errorf("invalid arguments: empty string")
 	}
-	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, statusCode: statusCode, status: status, createdAt: createdAt, transactionId: transactionId}, nil
+	return &Pay{uuid: uuid, amount: amount, currency: currency, invoiceId: invoiceId, statusCode: statusCode, status: status, createdAt: createdAt, transactionId: transactionId, terminal: terminal}, nil
 }
 
 func (p *Pay) HandleChargeResult(result *dto.VendorChargeResult) {
@@ -67,4 +69,16 @@ func (p Pay) CreatedAt() time.Time {
 
 func (p Pay) TransactionId() string {
 	return p.transactionId
+}
+
+func (p *Pay) IsStatusNew() bool {
+	return p.statusCode == StatusNew
+}
+
+func (p *Pay) IsStatusPending() bool {
+	return p.statusCode == StatusPending
+}
+
+func (p *Pay) Terminal() *vo.Terminal {
+	return p.terminal
 }

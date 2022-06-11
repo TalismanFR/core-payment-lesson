@@ -1,5 +1,10 @@
 package application
 
+import (
+	"diLesson/application/domain/vo"
+	"github.com/google/uuid"
+)
+
 type TerminalRepo interface {
-	GetAlias(terminalId string) (string, error)
+	FindByUuid(terminalUuid uuid.UUID) (*vo.Terminal, error)
 }
