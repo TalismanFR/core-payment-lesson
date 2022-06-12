@@ -53,9 +53,9 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 		return nil, err
 	}
 
-	terminal, err := c.terminalRepo.FindByUuid(uuidTerminal)
+	terminal, err := c.terminalRepo.FindByUuid(context.Background(), uuidTerminal)
 
-	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), cur, request.Description, request.InvoiceId, terminal, request.CreditCard)
+	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), cur, request.Description, request.InvoiceId, terminal, &request.CreditCard)
 	if err != nil {
 		return nil, err
 	}

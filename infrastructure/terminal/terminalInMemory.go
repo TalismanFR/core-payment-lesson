@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"context"
 	"diLesson/application/domain/vo"
 	"fmt"
 	"github.com/google/uuid"
@@ -14,11 +15,16 @@ func NewTerminalRepoInMemory(terminals map[string]*vo.Terminal) *TerminalRepoInM
 	return &TerminalRepoInMemory{terminals: terminals}
 }
 
-func (t *TerminalRepoInMemory) FindByUuid(terminalUuid uuid.UUID) (*vo.Terminal, error) {
-	a, ok := t.terminals[terminalUuid.String()]
-	if !ok {
-		return nil, fmt.Errorf("no such terminalUuid")
-	}
+func (t *TerminalRepoInMemory) FindByUuid(ctx context.Context, terminalUuid uuid.UUID) (*vo.Terminal, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+		a, ok := t.terminals[terminalUuid.String()]
+		if !ok {
+			return nil, fmt.Errorf("no such terminalUuid")
+		}
 
-	return a, nil
+		return a, nil
+	}
 }

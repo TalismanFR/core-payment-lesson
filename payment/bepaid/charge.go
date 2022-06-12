@@ -3,10 +3,13 @@ package bepaid
 import (
 	"context"
 	"diLesson/application/domain"
+	"diLesson/infrastructure/terminal"
 	"diLesson/payment/contract/dto"
+	"fmt"
 	"github.com/TalismanFR/bepaid/api"
 	"github.com/TalismanFR/bepaid/service"
 	sdkvo "github.com/TalismanFR/bepaid/service/vo"
+	"github.com/golobby/container/v3"
 	"net/http"
 )
 
@@ -28,7 +31,30 @@ func authorizationRequestFromPay(pay *domain.Pay) *sdkvo.AuthorizationRequest {
 
 func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
-	client := service.NewApiService(api.NewApi(http.DefaultClient, "", "", ""))
+	//TODO: extract url from pay.Terminal
+	//TODO: extract shopId and secret from vault
+
+	url, ok := pay.Terminal().AdditionalParams()["url"]
+	if !ok {
+		return nil, fmt.Errorf("terminal doesn't contain url")
+	}
+
+	if url == "" {
+		return nil, fmt.Errorf("terminal url is empty")
+	}
+
+	var secrets terminal.TerminalSecrets
+	err := container.Resolve(&secrets)
+	if err != nil {
+		return nil, err
+	}
+
+	pair, err := secrets.GetCredentials(context.Background(), pay.Terminal().Uuid())
+	if err != nil {
+		return nil, fmt.Errorf("cannot extract shop credentials: %w", err)
+	}
+
+	client := service.NewApiService(api.NewApi(http.DefaultClient, url, pair.ShopId, pair.Secret))
 
 	ar := authorizationRequestFromPay(pay)
 	resp, err := client.Authorizations(context.Background(), *ar)
