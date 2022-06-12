@@ -11,3 +11,20 @@ services:
       - ./pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+  vault:
+    image: vault:1.10.3
+    container_name: secrets
+    volumes:
+      - ./secrets/config:/secrets/config
+      - ./secrets/policies:/secrets/policies
+      - ./secrets/data:/secrets/data
+      - ./secrets/file:/secrets/file
+    ports:
+      - "8200:8200"
+    environment:
+      - VAULT_ADDR=http://0.0.0.0:8200
+      - VAULT_API_ADDR=http://0.0.0.0:8200
+      - VAULT_ADDRESS=http://0.0.0.0:8200
+    cap_add:
+      - IPC_LOCK
+    command: secrets server -config=/secrets/config/secrets.json

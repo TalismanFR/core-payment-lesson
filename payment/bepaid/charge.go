@@ -2,8 +2,8 @@ package bepaid
 
 import (
 	"context"
+	"diLesson/application"
 	"diLesson/application/domain"
-	"diLesson/infrastructure/terminal"
 	"diLesson/payment/contract/dto"
 	"fmt"
 	"github.com/TalismanFR/bepaid/api"
@@ -31,9 +31,7 @@ func authorizationRequestFromPay(pay *domain.Pay) *sdkvo.AuthorizationRequest {
 
 func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
-	//TODO: extract url from pay.Terminal
-	//TODO: extract shopId and secret from vault
-
+	// TODO: remove additionalParams, add Url field
 	url, ok := pay.Terminal().AdditionalParams()["url"]
 	if !ok {
 		return nil, fmt.Errorf("terminal doesn't contain url")
@@ -43,13 +41,13 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 		return nil, fmt.Errorf("terminal url is empty")
 	}
 
-	var secrets terminal.TerminalSecrets
+	var secrets application.SecretsService
 	err := container.Resolve(&secrets)
 	if err != nil {
 		return nil, err
 	}
 
-	pair, err := secrets.GetCredentials(context.Background(), pay.Terminal().Uuid())
+	pair, err := secrets.Get(context.Background(), pay.Terminal().Uuid())
 	if err != nil {
 		return nil, fmt.Errorf("cannot extract shop credentials: %w", err)
 	}
@@ -63,6 +61,9 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 	}
 
 	uid := resp.Uid()
+	if resp.IsError() {
+		return nil, fmt.Errorf(resp.Response.Message)
+	}
 
 	cr := sdkvo.NewCaptureRequest(uid, sdkvo.Amount(pay.Amount()))
 	resp, err = client.Capture(context.Background(), *cr)

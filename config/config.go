@@ -5,6 +5,7 @@ import (
 	"diLesson/application/contract"
 	"diLesson/application/service"
 	"diLesson/infrastructure/repository"
+	"diLesson/infrastructure/secrets"
 	"diLesson/infrastructure/terminal"
 	"diLesson/payment/bepaid"
 	contractPayment "diLesson/payment/contract"
@@ -14,11 +15,22 @@ import (
 
 func BuildDI() (err error) {
 
-	err = container.Transient(func() terminal.TerminalSecrets {
-		return terminal.NewVaultTerminalSecrets("http://127.0.0.1:8300", "myroot", "terminals")
+	err = container.Transient(func() (application.SecretsService, error) {
+		//TODO: move host and mountPath to config file
+		v, e := secrets.NewVaultService("http://127.0.0.1:8200", "terminals")
+		if e != nil {
+			return nil, e
+		}
+
+		if v.Validate() != nil {
+			return nil, e
+		}
+
+		return v, nil
 	})
 
 	err = container.Transient(func() (application.PayRepository, error) {
+		//TODO: move dsn to config file
 		dsn := "host=localhost user=payservice password=payservice dbname=payservice-db port=5432 sslmode=disable"
 
 		return repository.NewPayRepositoryPgsql(dsn)
@@ -37,6 +49,7 @@ func BuildDI() (err error) {
 	})
 
 	err = container.Transient(func() (application.TerminalRepo, error) {
+		//TODO: move dsn to config file
 		dsn := "host=localhost user=payservice password=payservice dbname=payservice-db port=5432 sslmode=disable"
 
 		return terminal.NewRepoPG(dsn)
