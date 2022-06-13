@@ -2,17 +2,22 @@ package dto
 
 type VendorChargeResult struct {
 	vendor string
+	status bool
+	info   string
 }
 
 func (v VendorChargeResult) Vendor() string {
 	return v.vendor
 }
 
-func NewVendorChargeResult(vendor string) *VendorChargeResult {
-	return &VendorChargeResult{vendor: vendor}
+func NewVendorChargeResult(vendor string, status bool, info string) *VendorChargeResult {
+	return &VendorChargeResult{vendor: vendor, status: status, info: info}
 }
 
-func (c *VendorChargeResult) IsFailed() bool {
+func (v *VendorChargeResult) IsFailed() bool {
+	return v.status
+}
 
-	return true
+func (v VendorChargeResult) Info() string {
+	return v.info
 }
