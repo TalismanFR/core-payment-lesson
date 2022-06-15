@@ -1,7 +1,7 @@
 package contract
 
-import "diLesson/application/contract/dto"
+import "payservice-core/application/contract/dto"
 
 type Charge interface {
-	Charge(request dto.ChargeRequest) (*dto.ChargeResult, error)
+    Charge(request dto.ChargeRequest) (*dto.ChargeResult, error)
 }

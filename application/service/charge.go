@@ -1,12 +1,12 @@
 package service
 
 import (
-    "diLesson/application"
-    "diLesson/application/contract/dto"
-    "diLesson/application/domain"
-    contract2 "diLesson/payment/contract"
     "github.com/golobby/container/v3"
     uuid "github.com/satori/go.uuid"
+    "payservice-core/application"
+    "payservice-core/application/contract/dto"
+    "payservice-core/application/domain"
+    contract2 "payservice-core/payment/contract"
     "time"
 )
 

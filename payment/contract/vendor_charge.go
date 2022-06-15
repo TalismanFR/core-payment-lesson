@@ -1,10 +1,10 @@
 package contract
 
 import (
-	"diLesson/application/domain"
-	"diLesson/payment/contract/dto"
+    "payservice-core/application/domain"
+    "payservice-core/payment/contract/dto"
 )
 
 type VendorCharge interface {
-	Charge(pay *domain.Pay) (*dto.VendorChargeResult, error)
+    Charge(pay *domain.Pay) (*dto.VendorChargeResult, error)
 }

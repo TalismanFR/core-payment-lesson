@@ -1,4 +1,4 @@
-module diLesson
+module payservice-core
 
 go 1.18
 

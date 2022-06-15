@@ -1,9 +1,9 @@
 package bepaid
 
 import (
-	"diLesson/application/domain"
-	"diLesson/payment/contract/dto"
 	"fmt"
+	"payservice-core/application/domain"
+	"payservice-core/payment/contract/dto"
 )
 
 type Charge struct {
@@ -11,6 +11,6 @@ type Charge struct {
 
 func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
-	fmt.Println("charge service bepaid")
-	return dto.NewVendorChargeResult("bepaid"), nil
+    fmt.Println("charge service bepaid")
+    return dto.NewVendorChargeResult("bepaid"), nil
 }
