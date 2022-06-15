@@ -1,6 +1,6 @@
 module diLesson
 
-go 1.17
+go 1.18
 
 require (
 	github.com/golobby/container/v3 v3.2.1
