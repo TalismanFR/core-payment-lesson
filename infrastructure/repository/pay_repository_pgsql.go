@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+// TODO: add transaction
+
 type Pay struct {
 	Uuid          uuid.UUID `gorm:"primaryKey"`
 	Amount        uint64
@@ -29,10 +31,12 @@ type PayRepositoryPgsql struct {
 }
 
 func NewPayRepositoryPgsql(dsn string) (*PayRepositoryPgsql, error) {
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
+
 	err = db.AutoMigrate(&Pay{})
 	if err != nil {
 		return nil, err
@@ -145,7 +149,7 @@ func domainPayFromPay(pay *Pay) (*domain.Pay, error) {
 
 	p, _ := domain.PayFull(
 		pay.Uuid,
-		vo.Amount(pay.Amount),
+		domain.Amount(pay.Amount),
 		cur,
 		"empty description",
 		pay.InvoiceId,

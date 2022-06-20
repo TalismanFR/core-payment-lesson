@@ -19,9 +19,9 @@ func NewChargeRequest(amount int, currency string, terminalId string, invoiceId 
 }
 
 func (c ChargeRequest) Valid() error {
-	//if err := c.CreditCard.Validate(); err != nil {
-	//	return fmt.Errorf("credir card is invalid: %w", err)
-	//}
+	if err := c.CreditCard.Validate(); err != nil {
+		return fmt.Errorf("credir card is invalid: %w", err)
+	}
 	if c.Amount < 0 {
 		return fmt.Errorf("amount less than zero")
 	}

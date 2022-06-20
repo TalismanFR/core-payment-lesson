@@ -6,8 +6,8 @@ import (
 	"diLesson/application/domain"
 	"diLesson/payment/contract/dto"
 	"fmt"
-	"github.com/TalismanFR/bepaid/api"
-	"github.com/TalismanFR/bepaid/service"
+	sdkapi "github.com/TalismanFR/bepaid/api"
+	sdkservice "github.com/TalismanFR/bepaid/service"
 	sdkvo "github.com/TalismanFR/bepaid/service/vo"
 	"github.com/golobby/container/v3"
 	"net/http"
@@ -24,7 +24,7 @@ func NewCharge(vendor string) *Charge {
 func authorizationRequestFromPay(pay *domain.Pay) *sdkvo.AuthorizationRequest {
 	ccPay := pay.CreditCard()
 	cc := sdkvo.NewCreditCard(ccPay.Number(), ccPay.VerificationValue(), ccPay.Holder(), sdkvo.ExpMonth(ccPay.ExpMonth().String()), ccPay.ExpYear())
-	request := sdkvo.NewAuthorizationRequest(sdkvo.Amount(pay.Amount()), sdkvo.Currency(pay.Currency().String()), pay.Description(), pay.InvoiceId(), false, *cc)
+	request := sdkvo.NewAuthorizationRequest(sdkvo.Amount(pay.Amount()), sdkvo.Currency(pay.Currency().String()), pay.Description(), pay.InvoiceId(), true, *cc)
 
 	return request
 }
@@ -41,18 +41,23 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 		return nil, fmt.Errorf("terminal url is empty")
 	}
 
-	var secrets application.SecretsService
-	err := container.Resolve(&secrets)
+	var secretsService application.SecretsRepository
+	err := container.Resolve(&secretsService)
 	if err != nil {
 		return nil, err
 	}
 
-	pair, err := secrets.Get(context.Background(), pay.Terminal().Uuid())
+	data, err := secretsService.Get(context.Background(), pay.Terminal().Uuid())
 	if err != nil {
 		return nil, fmt.Errorf("cannot extract shop credentials: %w", err)
 	}
 
-	client := service.NewApiService(api.NewApi(http.DefaultClient, url, pair.ShopId, pair.Secret))
+	shopId, secret, err := readTerminalSecrets(data)
+	if err != nil {
+		return nil, err
+	}
+
+	client := sdkservice.NewApiService(sdkapi.NewApi(http.DefaultClient, url, shopId, secret))
 
 	ar := authorizationRequestFromPay(pay)
 	resp, err := client.Authorizations(context.Background(), *ar)
@@ -88,4 +93,28 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 	vendor3ds := &dto.VendorThreeDs{Status: dto.UnknownThreeDsVendorStatus, RedirectUrl: "example.com/redirect"}
 
 	return dto.NewVendorChargeResult(c.vendor, uid, resp.Transaction.Message, vendorStatus, resp.Transaction.ReceiptUrl, vendor3ds), nil
+}
+
+func readTerminalSecrets(sm map[string]interface{}) (shopId string, secret string, err error) {
+	v1, ok := sm["shop_id"]
+	if !ok {
+		return "", "", fmt.Errorf("key shop_id is absent in a map")
+	}
+
+	shopId, ok = v1.(string)
+	if !ok {
+		return "", "", fmt.Errorf("shopId type isn't a string. type: %T", v1)
+	}
+
+	v2, ok := sm["secret"]
+	if !ok {
+		return "", "", fmt.Errorf("key 'secret' is absent in a map")
+	}
+
+	secret, ok = v2.(string)
+	if !ok {
+		return "", "", fmt.Errorf("secret type isn't a string. type: %T", v2)
+	}
+
+	return
 }

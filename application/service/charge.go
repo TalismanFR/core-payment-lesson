@@ -6,7 +6,6 @@ import (
 	"diLesson/application/contract/dto"
 	"diLesson/application/domain"
 	"diLesson/application/domain/currency"
-	"diLesson/application/domain/vo"
 	"diLesson/payment/contract"
 	"fmt"
 	"github.com/golobby/container/v3"
@@ -17,24 +16,10 @@ const (
 	chargeSuffix = "_charge"
 )
 
-//func init() {
-//	if err := config.BuildDI(); err != nil {
-//		panic(fmt.Sprintf("couldn't build dependencies for the application: %v", err))
-//	}
-//}
-
 type Charge struct {
 	payRepo      application.PayRepository `container:"type"`
 	terminalRepo application.TerminalRepo  `container:"type"`
 }
-
-//func (c Charge) Update(id uuid.UUID, request dto.ChargeRequest) error {
-//	p, err := domain.NewPay(id, vo.Amount(request.Amount), vo.RUB, request.InvoiceId, domain.StatusCodeOK, vo.StatusNew, time.Now(), "transactionId")
-//	if err != nil {
-//		return err
-//	}
-//	return c.payRepo.Update(context.Background(), p)
-//}
 
 func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
@@ -54,14 +39,20 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 	}
 
 	terminal, err := c.terminalRepo.FindByUuid(context.Background(), uuidTerminal)
+	if err != nil {
+		return nil, err
+	}
 
-	pay, err := domain.NewPay(uuid.New(), vo.Amount(request.Amount), cur, request.Description, request.InvoiceId, terminal, &request.CreditCard)
+	pay, err := domain.NewPay(uuid.New(), domain.Amount(request.Amount), cur, request.Description, request.InvoiceId, terminal, &request.CreditCard)
 	if err != nil {
 		return nil, err
 	}
 
 	var vendor contract.VendorCharge
 	err = container.NamedResolve(&vendor, terminal.Alias()+chargeSuffix)
+	if err != nil {
+		return nil, err
+	}
 
 	result, err := vendor.Charge(pay)
 	if err != nil {

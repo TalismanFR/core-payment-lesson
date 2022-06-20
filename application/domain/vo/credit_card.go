@@ -4,8 +4,6 @@ import (
 	"fmt"
 )
 
-type Amount uint64
-
 type CreditCard struct {
 
 	// номер карты, длина - от 12 до 19 цифр

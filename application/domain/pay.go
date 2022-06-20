@@ -10,9 +10,11 @@ import (
 	"time"
 )
 
+type Amount uint64
+
 type Pay struct {
 	uuid          uuid.UUID
-	amount        vo.Amount
+	amount        Amount
 	currency      currency.Currency
 	description   string
 	invoiceId     string
@@ -23,7 +25,7 @@ type Pay struct {
 	creditCard    *vo.CreditCard
 }
 
-func NewPay(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, description string, invoiceId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
+func NewPay(uuid uuid.UUID, amount Amount, currency currency.Currency, description string, invoiceId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
 	if currency.String() == "" || invoiceId == "" {
 		return nil, fmt.Errorf("invalid arguments: empty string")
 	}
@@ -41,7 +43,7 @@ func NewPay(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, descri
 	}, nil
 }
 
-func PayFull(uuid uuid.UUID, amount vo.Amount, currency currency.Currency, description string, invoiceId string, status status.Status, createdAt time.Time, transactionId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
+func PayFull(uuid uuid.UUID, amount Amount, currency currency.Currency, description string, invoiceId string, status status.Status, createdAt time.Time, transactionId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
 
 	p, err := NewPay(uuid, amount, currency, description, invoiceId, terminal, cc)
 	if err != nil {
@@ -64,7 +66,7 @@ func (p Pay) Uuid() uuid.UUID {
 	return p.uuid
 }
 
-func (p Pay) Amount() vo.Amount {
+func (p Pay) Amount() Amount {
 	return p.amount
 }
 
