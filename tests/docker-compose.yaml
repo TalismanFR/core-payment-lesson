@@ -8,17 +8,16 @@ services:
       POSTGRES_PASSWORD: "payservice"
       PGDATA: "/var/lib/postgresql/data/pgdata"
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - .:/var/lib/postgresql/data
     ports:
       - "5432:5432"
   vault:
-    image: vault:1.10.3
-    container_name: secrets
+    image: vault:1.10.4
     volumes:
-      - ./secrets/config:/secrets/config
-      - ./secrets/policies:/secrets/policies
-      - ./secrets/data:/secrets/data
-      - ./secrets/file:/secrets/file
+      - ./vault/config:/vault/config
+      - ./vault/policies:/vault/policies
+      - ./vault/data:/vault/data
+      - ./vault/file:/vault/file
     ports:
       - "8200:8200"
     environment:
@@ -27,4 +26,4 @@ services:
       - VAULT_ADDRESS=http://0.0.0.0:8200
     cap_add:
       - IPC_LOCK
-    command: secrets server -config=/secrets/config/secrets.json
+    command: vault server -config=/vault/config/vault.json
