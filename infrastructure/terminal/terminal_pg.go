@@ -17,6 +17,10 @@ type TerminalDB struct {
 	CreatedAt time.Time
 }
 
+func (TerminalDB) TableName() string {
+	return "terminals"
+}
+
 type RepoPG struct {
 	db *gorm.DB
 }
