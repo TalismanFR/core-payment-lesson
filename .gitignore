@@ -1,2 +1,4 @@
 /.env
-/tests/charge/.env
+/.bin
+/.idea
+/.terminals
