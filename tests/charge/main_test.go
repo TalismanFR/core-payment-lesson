@@ -7,6 +7,7 @@ import (
 	"diLesson/application/domain/vo"
 	"diLesson/config"
 	"diLesson/pkg/vault"
+	"github.com/golobby/container/v3"
 	tc "github.com/testcontainers/testcontainers-go"
 	"io"
 	"os"
