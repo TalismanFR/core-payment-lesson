@@ -5,18 +5,43 @@ import (
 	"diLesson/application/contract"
 	"diLesson/application/service"
 	"diLesson/infrastructure/repository"
-	"diLesson/infrastructure/secrets"
 	"diLesson/infrastructure/terminal"
 	"diLesson/payment/bepaid"
 	contractPayment "diLesson/payment/contract"
 	"diLesson/payment/tinkoff"
 	"fmt"
 	"github.com/golobby/container/v3"
+	"time"
 )
 
 type Config struct {
+
+	// Vault address and token are stored in env and processed in vault library
+
+	Http struct {
+		Port         string
+		ReadTimeout  time.Duration
+		WriteTimeout time.Duration
+	}
+
+	Cache struct {
+		Ttl time.Duration
+	}
+
+	Auth struct {
+		AccessTokenTTL         time.Duration
+		RefreshTokenTTL        time.Duration
+		VerificationCodeLength int
+	}
+
+	Limiter struct {
+		Rps   int
+		Burst int
+		Ttl   time.Duration
+	}
+
 	Vault struct {
-		Address   string
+		// e.g. "terminals"
 		MountPath string
 	}
 
@@ -27,32 +52,13 @@ type Config struct {
 		DBName   string
 		Port     string
 		SslMode  string
-	}
-
-	Terminal struct {
-		Host     string
-		User     string
-		Password string
-		DBName   string
-		Port     string
-		SslMode  string
-	}
+	} `yaml:"postgres"`
 }
 
 func BuildDI(conf Config) (err error) {
 
-	err = container.Transient(func() (application.SecretsRepository, error) {
-
-		v, e := secrets.NewVault(conf.Vault.Address, conf.Vault.MountPath)
-		if e != nil {
-			return nil, e
-		}
-
-		if e = v.Validate(); e != nil {
-			return nil, e
-		}
-
-		return v, nil
+	err = container.Transient(func() (application.TerminalRepo, error) {
+		return terminal.NewVault(conf.Vault.MountPath)
 	})
 
 	err = container.Transient(func() (application.PayRepository, error) {
@@ -66,8 +72,7 @@ func BuildDI(conf Config) (err error) {
 			conf.Payment.SslMode,
 		)
 
-		pr, err := repository.NewPayRepositoryPgsql(dsn)
-		return pr, err
+		return repository.NewPayRepositoryPgsql(dsn)
 	})
 
 	err = container.NamedTransient("bepaid_charge", func() (contractPayment.VendorCharge, error) {
@@ -80,19 +85,6 @@ func BuildDI(conf Config) (err error) {
 		s := tinkoff.Charge{}
 
 		return &s, nil
-	})
-
-	err = container.Transient(func() (application.TerminalRepo, error) {
-
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-			conf.Terminal.Host,
-			conf.Terminal.User,
-			conf.Terminal.Password,
-			conf.Terminal.DBName,
-			conf.Terminal.Port,
-			conf.Terminal.SslMode,
-		)
-		return terminal.NewRepoPG(dsn)
 	})
 
 	err = container.Transient(func() (contract.Charge, error) {

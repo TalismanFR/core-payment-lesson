@@ -31,34 +31,26 @@ func authorizationRequestFromPay(pay *domain.Pay) *sdkvo.AuthorizationRequest {
 
 func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
-	// TODO: remove additionalParams, add Url field
-	url, ok := pay.Terminal().AdditionalParams()["url"]
-	if !ok {
-		return nil, fmt.Errorf("terminal doesn't contain url")
-	}
-
-	if url == "" {
-		return nil, fmt.Errorf("terminal url is empty")
-	}
-
-	var secretsService application.SecretsRepository
-	err := container.Resolve(&secretsService)
+	// Get args for api service
+	var terminals application.TerminalRepo
+	err := container.Resolve(&terminals)
 	if err != nil {
 		return nil, err
 	}
 
-	data, err := secretsService.Get(context.Background(), pay.Terminal().Uuid())
+	terminal, err := terminals.FindByUuid(context.Background(), pay.Terminal().Uuid())
 	if err != nil {
 		return nil, fmt.Errorf("cannot extract shop credentials: %w", err)
 	}
 
-	shopId, secret, err := readTerminalSecrets(data)
+	shopId, secret, url, err := readTerminalSecrets(terminal.AdditionalParams())
 	if err != nil {
 		return nil, err
 	}
 
 	client := sdkservice.NewApiService(sdkapi.NewApi(http.DefaultClient, url, shopId, secret))
 
+	// Create auth request
 	ar := authorizationRequestFromPay(pay)
 	resp, err := client.Authorizations(context.Background(), *ar)
 	if err != nil {
@@ -70,6 +62,7 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 		return nil, fmt.Errorf(resp.Response.Message)
 	}
 
+	// Create capture request
 	cr := sdkvo.NewCaptureRequest(uid, sdkvo.Amount(pay.Amount()))
 	resp, err = client.Capture(context.Background(), *cr)
 	if err != nil {
@@ -78,6 +71,7 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
 	uid = resp.Uid()
 
+	// Create VendorChargeResult
 	vendorStatus := dto.UnknownVendorChargeStatus
 
 	if resp.IsFailed() {
@@ -95,25 +89,35 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 	return dto.NewVendorChargeResult(c.vendor, uid, resp.Transaction.Message, vendorStatus, resp.Transaction.ReceiptUrl, vendor3ds), nil
 }
 
-func readTerminalSecrets(sm map[string]interface{}) (shopId string, secret string, err error) {
+func readTerminalSecrets(sm map[string]interface{}) (shopId string, secret string, url string, err error) {
 	v1, ok := sm["shop_id"]
 	if !ok {
-		return "", "", fmt.Errorf("key shop_id is absent in a map")
+		return "", "", "", fmt.Errorf("key shop_id is absent in a map")
 	}
 
 	shopId, ok = v1.(string)
 	if !ok {
-		return "", "", fmt.Errorf("shopId type isn't a string. type: %T", v1)
+		return "", "", "", fmt.Errorf("shopId type isn't a string. type: %T", v1)
 	}
 
 	v2, ok := sm["secret"]
 	if !ok {
-		return "", "", fmt.Errorf("key 'secret' is absent in a map")
+		return "", "", "", fmt.Errorf("key 'secret' is absent in a map")
 	}
 
 	secret, ok = v2.(string)
 	if !ok {
-		return "", "", fmt.Errorf("secret type isn't a string. type: %T", v2)
+		return "", "", "", fmt.Errorf("secret type isn't a string. type: %T", v2)
+	}
+
+	v3, ok := sm["url"]
+	if !ok {
+		return "", "", "", fmt.Errorf("key 'url' is absent in a map")
+	}
+
+	url, ok = v3.(string)
+	if !ok {
+		return "", "", "", fmt.Errorf("url type isn't a string. type: %T", v2)
 	}
 
 	return

@@ -1,7 +1,22 @@
+http:
+  port: 8000
+  maxHeaderBytes: 1
+  readTimeout: 10s
+  writeTimeout: 10s
+
+cache:
+  ttl: 60s
+
+auth:
+  accessTokenTTL: 2h
+  refreshTokenTTL: 720h #30 days
+  verificationCodeLength: 8
+
+limiter:
+  rps: 10
+  burst: 20
+  ttl: 10m
+
 postgres:
-  host: "localhost"
-  user: "payservice"
-  password: "payservice"
   dbname: "payservice-db"
-  port: 5432
   sslmode: "disable"
