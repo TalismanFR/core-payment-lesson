@@ -11,8 +11,39 @@ import (
 	"diLesson/payment/tinkoff"
 	"fmt"
 	"github.com/golobby/container/v3"
+	"github.com/kelseyhightower/envconfig"
+	"gopkg.in/yaml.v3"
+	"os"
 	"time"
 )
+
+func Parse(filePath string) *Config {
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		processError(err)
+	}
+
+	defer f.Close()
+
+	var cfg Config
+
+	if err := yaml.NewDecoder(f).Decode(&cfg); err != nil {
+		processError(err)
+	}
+
+	err = envconfig.Process("", &cfg)
+	if err != nil {
+		processError(err)
+	}
+
+	return &cfg
+}
+
+func processError(err error) {
+	fmt.Println(err)
+	os.Exit(2)
+}
 
 type Config struct {
 
@@ -22,36 +53,38 @@ type Config struct {
 		Port         string
 		ReadTimeout  time.Duration
 		WriteTimeout time.Duration
-	}
+	} `yaml:"http"`
 
 	Cache struct {
 		Ttl time.Duration
-	}
+	} `yaml:"cache"`
 
 	Auth struct {
 		AccessTokenTTL         time.Duration
 		RefreshTokenTTL        time.Duration
 		VerificationCodeLength int
-	}
+	} `yaml:"auth"`
 
 	Limiter struct {
 		Rps   int
 		Burst int
 		Ttl   time.Duration
-	}
+	} `yaml:"limiter"`
 
 	Vault struct {
+		// Address and token are taken from env VAULT_ADDR and VAULT_TOKEN
+
 		// e.g. "terminals"
 		MountPath string
-	}
+	} `yaml:"vault"`
 
 	Payment struct {
-		Host     string
-		User     string
-		Password string
-		DBName   string
-		Port     string
-		SslMode  string
+		Host     string `envconfig:"POSTGRES_HOST"`
+		User     string `envconfig:"POSTGRES_USER"`
+		Password string `envconfig:"POSTGRES_PASSWORD"`
+		DBName   string `yaml:"dbName"`
+		Port     string `envconfig:"POSTGRES_PORT"`
+		SslMode  string `yaml:"sslMode"`
 	} `yaml:"postgres"`
 }
 

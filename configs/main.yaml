@@ -17,6 +17,9 @@ limiter:
   burst: 20
   ttl: 10m
 
+vault:
+  mountPath: "terminals"
+
 postgres:
-  dbname: "payservice-db"
-  sslmode: "disable"
+  dbName: "payservice-db"
+  sslMode: "disable"
