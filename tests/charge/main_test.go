@@ -1,7 +1,6 @@
 package charge
 
 import (
-	"bufio"
 	"diLesson/application/contract"
 	"diLesson/application/contract/dto"
 	"diLesson/application/domain/vo"
@@ -9,9 +8,9 @@ import (
 	"diLesson/pkg/vault"
 	"github.com/golobby/container/v3"
 	tc "github.com/testcontainers/testcontainers-go"
-	"io"
+	"gotest.tools/v3/env"
 	"os"
-	"strings"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -30,30 +29,29 @@ func TestCharge_Integration(t *testing.T) {
 
 	defer dc.Down()
 
+	// Create vault client
 	v, err := vault.NewVault("http://127.0.0.1:8200", "terminals")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pr, pw := io.Pipe()
-
-	go func() {
-		defer pw.Close()
-		if err = v.Initialize(pw); err != nil {
-			t.Error(err)
-			return
-		}
-	}()
-
-	sc := bufio.NewScanner(pr)
-	for sc.Scan() {
-		vs := strings.Split(sc.Text(), "=")
-		err := os.Setenv(vs[0], vs[1])
-		if err != nil {
-			t.Fatal(err)
-		}
+	// Initialize and unseal vault
+	// Get VAULT_ADDR and VAULT_TOKEN env
+	envs, err := v.Initialize()
+	if err != nil {
+		t.Fatal(err)
 	}
 
+	envs["POSTGRES_HOST"] = "localhost"
+	envs["POSTGRES_PORT"] = "5432"
+	envs["POSTGRES_USER"] = "payservice"
+	envs["POSTGRES_PASSWORD"] = "payservice"
+
+	// Setting envs
+	unpatch := env.PatchAll(t, envs)
+	defer unpatch()
+
+	// Populating vault with values
 	f, err := os.Open("terminals.json")
 	if err != nil {
 		t.Fatal(err)
@@ -69,17 +67,12 @@ func TestCharge_Integration(t *testing.T) {
 	terminalId := uuids[0]
 
 	// Build config
-	conf := config.Config{}
+	p, err := filepath.Abs("main.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	conf.Vault.MountPath = "terminals"
-
-	// host=localhost user=payservice password=payservice dbname=payservice-db port=5432 sslmode=disable
-	conf.Payment.Host = "localhost"
-	conf.Payment.User = "payservice"
-	conf.Payment.Password = "payservice"
-	conf.Payment.DBName = "payservice-db"
-	conf.Payment.Port = "5432"
-	conf.Payment.SslMode = "disable"
+	conf := config.Parse(p)
 
 	time.Sleep(5 * time.Second)
 
@@ -101,9 +94,14 @@ func TestCharge_Integration(t *testing.T) {
 	t.Log("sending charge request")
 
 	result, err := service.Charge(requestDto)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	t.Log(result)
+
+	if err == nil {
+		t.Fatal("error shouldn't be nil")
+	}
+
+	if err.Error() != "Shop not found" {
+		t.Fatalf("unexpected error message: AR: %v, ER: %s", err, "Shop not found")
+	}
 }

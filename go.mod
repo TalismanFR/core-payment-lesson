@@ -1,6 +1,6 @@
 module diLesson
 
-go 1.17
+go 1.18
 
 require (
 	github.com/TalismanFR/bepaid v0.0.0-20220611204139-eab2143a1bea
@@ -8,9 +8,9 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/vault/api v1.7.2
 	github.com/kelseyhightower/envconfig v1.4.0
-	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.3.7
 	gorm.io/gorm v1.23.5
+	gotest.tools/v3 v3.3.0
 )
 
 require (
@@ -20,6 +20,7 @@ require (
 	github.com/fatih/color v1.10.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
+	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v0.16.2 // indirect
@@ -71,4 +72,5 @@ require (
 	google.golang.org/grpc v1.41.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -30,6 +30,11 @@ func main() {
 		log.Fatal("NewVault error: ", err)
 	}
 
+	envs, err := v.Initialize()
+	if err != nil {
+		log.Fatal("Vault.Initialize error: ", err)
+	}
+
 	f := os.Stdout
 	if out != "" {
 		f, err = os.Create(out)
@@ -40,8 +45,11 @@ func main() {
 		}
 	}
 
-	if err := v.Initialize(f); err != nil {
-		log.Fatal("Vault.Initialize error: ", err)
+	for k, v := range envs {
+		_, err := fmt.Fprintf(f, "%s=%s", k, v)
+		if err != nil {
+			log.Fatal("fmt.Fprintf error: ", err)
+		}
 	}
 
 	f2, err := os.Open(file)
@@ -76,13 +84,15 @@ type tokens struct {
 	shared []string
 }
 
-func (v Vault) Initialize(out io.Writer) error {
+func (v Vault) Initialize() (map[string]string, error) {
+
+	envs := map[string]string{}
 
 	sys := v.c.Sys()
 
 	s, err := sys.SealStatus()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	isInit, isSealed := s.Initialized, s.Sealed
@@ -90,14 +100,14 @@ func (v Vault) Initialize(out io.Writer) error {
 	t := &tokens{}
 
 	if isInit {
-		return fmt.Errorf("vault shouldn't be initialized")
+		return nil, fmt.Errorf("vault shouldn't be initialized")
 	}
 
 	initR := &vault.InitRequest{SecretShares: 1, SecretThreshold: 1}
 
 	resp, err := sys.Init(initR)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	t.shared = resp.KeysB64
@@ -108,34 +118,29 @@ func (v Vault) Initialize(out io.Writer) error {
 	if isSealed {
 		_, err := sys.Unseal(t.shared[0])
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	mounts, err := sys.ListMounts()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if _, ok := mounts[v.mountPath+"/"]; !ok {
 		err = sys.Mount(v.mountPath, &vault.MountInput{Type: "kv", Options: map[string]string{"version": "2"}})
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	_, err = fmt.Fprintf(out, "VAULT_TOKEN=%s\n", t.root)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(out, "VAULT_ADDR=%s\n", v.c.Address())
-	if err != nil {
-		return err
-	}
+	envs["VAULT_TOKEN"] = t.root
+	envs["VAULT_ADDR"] = v.c.Address()
 
-	return nil
+	return envs, nil
 }
 
+// Populate decodes reader as json object and puts values in v.MountPath
 func (v *Vault) Populate(in io.ReadCloser) ([]string, error) {
 	defer in.Close()
 

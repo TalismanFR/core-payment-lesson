@@ -23,7 +23,7 @@ func TestParse(t *testing.T) {
 	defer unpatch()
 
 	input := `http:
-  port: "8000"
+  port: 8000
   readTimeout: 10s
   writeTimeout: 5s
 

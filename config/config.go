@@ -91,7 +91,7 @@ type (
 	}
 )
 
-func BuildDI(conf Config) (err error) {
+func BuildDI(conf *Config) (err error) {
 
 	err = container.Transient(func() (application.TerminalRepo, error) {
 		return terminal.NewVault(conf.Vault.MountPath)
