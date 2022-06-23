@@ -1,27 +1,31 @@
 package config
 
 import (
-	"fmt"
+	"github.com/google/go-cmp/cmp"
+	"gotest.tools/v3/env"
 	"log"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestParse(t *testing.T) {
-	p, _ := filepath.Abs("cfg1.yaml")
-	p = filepath.Dir(p)
-	f, err := os.CreateTemp(p, "cfg1.yaml")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.Remove(f.Name()) // clean up
+	unpatch := env.PatchAll(t, map[string]string{
+		"POSTGRES_HOST":     "postgres",
+		"POSTGRES_PORT":     "5432",
+		"POSTGRES_USER":     "payservice",
+		"POSTGRES_PASSWORD": "payservice",
+		"VAULT_ADDR":        "example.com",
+		"VAULT_TOKEN":       "12345",
+	})
 
-	y := `http:
-  port: 8000
-  maxHeaderBytes: 1
+	defer unpatch()
+
+	input := `http:
+  port: "8000"
   readTimeout: 10s
-  writeTimeout: 10s
+  writeTimeout: 5s
 
 cache:
   ttl: 60s
@@ -34,24 +38,70 @@ auth:
 limiter:
   rps: 10
   burst: 20
-  ttl: 10m
-
-vault:
-  mountPath: "terminals"
+  ttl: 5m
 
 postgres:
-  dbName: "payservice-db"
-  sslMode: "disable"
-`
+  dbName: payservice-db
+  sslMode: disable
 
-	if _, err := f.Write([]byte(y)); err != nil {
+vault:
+  mountPath: terminals
+`
+	p, _ := filepath.Abs("cfg1.yaml")
+	f, err := os.CreateTemp(filepath.Dir(p), "cfg1.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fileName := f.Name()
+
+	defer os.Remove(fileName) // clean up
+
+	er := Config{
+		Http: HttpConfig{
+			Port:         "8000",
+			ReadTimeout:  10 * time.Second,
+			WriteTimeout: 5 * time.Second,
+		},
+		Cache: CacheConfig{
+			Ttl: 60 * time.Second,
+		},
+		Auth: AuthConfig{
+			AccessTokenTTL:         2 * time.Hour,
+			RefreshTokenTTL:        720 * time.Hour,
+			VerificationCodeLength: 8,
+		},
+		Limiter: LimiterConfig{
+			Rps:   10,
+			Burst: 20,
+			Ttl:   5 * time.Minute,
+		},
+
+		Postgres: PostgresConfig{
+			Host:     "postgres",
+			Port:     "5432",
+			User:     "payservice",
+			Password: "payservice",
+			DBName:   "payservice-db",
+			SslMode:  "disable",
+		},
+
+		Vault: VaultConfig{
+			MountPath: "terminals",
+		},
+	}
+
+	if _, err := f.Write([]byte(input)); err != nil {
 		log.Fatal(err)
 	}
 	if err := f.Close(); err != nil {
 		log.Fatal(err)
 	}
 
-	cfg := Parse(f.Name())
+	cfg := Parse(fileName)
 
-	fmt.Printf("%#v\n", cfg)
+	if !cmp.Equal(er, *cfg) {
+		t.Log(cmp.Diff(er, *cfg))
+		t.Fatal()
+	}
 }

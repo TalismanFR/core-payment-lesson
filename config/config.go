@@ -45,48 +45,51 @@ func processError(err error) {
 	os.Exit(2)
 }
 
-type Config struct {
+type (
+	Config struct {
+		Http     HttpConfig     `yaml:"http"`
+		Cache    CacheConfig    `yaml:"cache"`
+		Auth     AuthConfig     `yaml:"auth"`
+		Limiter  LimiterConfig  `yaml:"limiter"`
+		Postgres PostgresConfig `yaml:"postgres"`
+		Vault    VaultConfig    `yaml:"vault"`
+	}
 
-	// Vault address and token are stored in env and processed in vault library
-
-	Http struct {
+	HttpConfig struct {
 		Port         string
-		ReadTimeout  time.Duration
-		WriteTimeout time.Duration
-	} `yaml:"http"`
+		ReadTimeout  time.Duration `yaml:"readTimeout"`
+		WriteTimeout time.Duration `yaml:"writeTimeout"`
+	}
 
-	Cache struct {
+	CacheConfig struct {
 		Ttl time.Duration
-	} `yaml:"cache"`
+	}
 
-	Auth struct {
-		AccessTokenTTL         time.Duration
-		RefreshTokenTTL        time.Duration
-		VerificationCodeLength int
-	} `yaml:"auth"`
+	AuthConfig struct {
+		AccessTokenTTL         time.Duration `yaml:"accessTokenTTL"`
+		RefreshTokenTTL        time.Duration `yaml:"refreshTokenTTL"`
+		VerificationCodeLength int           `yaml:"verificationCodeLength"`
+	}
 
-	Limiter struct {
+	LimiterConfig struct {
 		Rps   int
 		Burst int
 		Ttl   time.Duration
-	} `yaml:"limiter"`
+	}
 
-	Vault struct {
-		// Address and token are taken from env VAULT_ADDR and VAULT_TOKEN
+	VaultConfig struct {
+		MountPath string `yaml:"mountPath"`
+	}
 
-		// e.g. "terminals"
-		MountPath string
-	} `yaml:"vault"`
-
-	Payment struct {
+	PostgresConfig struct {
 		Host     string `envconfig:"POSTGRES_HOST"`
 		User     string `envconfig:"POSTGRES_USER"`
 		Password string `envconfig:"POSTGRES_PASSWORD"`
 		DBName   string `yaml:"dbName"`
 		Port     string `envconfig:"POSTGRES_PORT"`
 		SslMode  string `yaml:"sslMode"`
-	} `yaml:"postgres"`
-}
+	}
+)
 
 func BuildDI(conf Config) (err error) {
 
@@ -97,12 +100,12 @@ func BuildDI(conf Config) (err error) {
 	err = container.Transient(func() (application.PayRepository, error) {
 
 		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-			conf.Payment.Host,
-			conf.Payment.User,
-			conf.Payment.Password,
-			conf.Payment.DBName,
-			conf.Payment.Port,
-			conf.Payment.SslMode,
+			conf.Postgres.Host,
+			conf.Postgres.User,
+			conf.Postgres.Password,
+			conf.Postgres.DBName,
+			conf.Postgres.Port,
+			conf.Postgres.SslMode,
 		)
 
 		return repository.NewPayRepositoryPgsql(dsn)
