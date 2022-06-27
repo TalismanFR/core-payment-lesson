@@ -17,34 +17,6 @@ import (
 	"time"
 )
 
-func Parse(filePath string) *Config {
-
-	f, err := os.Open(filePath)
-	if err != nil {
-		processError(err)
-	}
-
-	defer f.Close()
-
-	var cfg Config
-
-	if err := yaml.NewDecoder(f).Decode(&cfg); err != nil {
-		processError(err)
-	}
-
-	err = envconfig.Process("", &cfg)
-	if err != nil {
-		processError(err)
-	}
-
-	return &cfg
-}
-
-func processError(err error) {
-	fmt.Println(err)
-	os.Exit(2)
-}
-
 type (
 	Config struct {
 		Http     HttpConfig     `yaml:"http"`
@@ -90,6 +62,34 @@ type (
 		SslMode  string `yaml:"sslMode"`
 	}
 )
+
+func Parse(filePath string) *Config {
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		processError(err)
+	}
+
+	defer f.Close()
+
+	cfg := &Config{}
+
+	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
+		processError(err)
+	}
+
+	err = envconfig.Process("", cfg)
+	if err != nil {
+		processError(err)
+	}
+
+	return cfg
+}
+
+func processError(err error) {
+	fmt.Println(err)
+	os.Exit(2)
+}
 
 func BuildDI(conf *Config) (err error) {
 

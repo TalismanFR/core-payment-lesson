@@ -12,7 +12,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 )
 
 func TestCharge_Integration(t *testing.T) {
@@ -74,7 +73,8 @@ func TestCharge_Integration(t *testing.T) {
 
 	conf := config.Parse(p)
 
-	time.Sleep(5 * time.Second)
+	// TODO:sometimes test fail without time.Sleep
+	//time.Sleep(5 * time.Second)
 
 	err = config.BuildDI(conf)
 	if err != nil {

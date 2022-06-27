@@ -29,10 +29,9 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 
 	cur, err := currency.FromString(request.Currency)
 	if err != nil {
-		return nil, fmt.Errorf("invalid requst: %w", err)
+		return nil, fmt.Errorf("invalid request: %w", err)
 	}
 
-	// TODO: when to generate and when to acquire transactionId
 	uuidTerminal, err := uuid.Parse(request.TerminalId)
 	if err != nil {
 		return nil, err

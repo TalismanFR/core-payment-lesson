@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// TODO: add transaction
+//TODO: add transaction
 
 type Pay struct {
 	Uuid          uuid.UUID `gorm:"primaryKey"`
@@ -74,7 +74,6 @@ func (repo *PayRepositoryPgsql) FindByInvoiceID(ctx context.Context, invoiceId s
 
 	tx := repo.db.WithContext(ctx)
 
-	// TODO: change to var pay Pay
 	var pay *Pay
 
 	r := tx.First(pay, "invoiceId = ?", invoiceId)
@@ -99,7 +98,6 @@ func (repo *PayRepositoryPgsql) FindByUuid(ctx context.Context, uuid uuid.UUID) 
 
 	tx := repo.db.WithContext(ctx)
 
-	// TODO: change to var pay Pay
 	var pay *Pay
 
 	r := tx.First(pay, "id = ?", uuid.String())
