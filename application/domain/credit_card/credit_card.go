@@ -1,4 +1,4 @@
-package vo
+package credit_card
 
 import (
 	"fmt"
@@ -122,9 +122,58 @@ func FromString(s string) (ExpirationMonth, error) {
 		return February, nil
 	case marStr:
 		return March, nil
+	case aprStr:
+		return April, nil
+	case mayStr:
+		return May, nil
+	case junStr:
+		return June, nil
+	case julStr:
+		return July, nil
+	case augStr:
+		return August, nil
+	case sepStr:
+		return September, nil
+	case octStr:
+		return October, nil
+	case novStr:
+		return November, nil
+	case decStr:
+		return December, nil
 	}
 
-	return UnknownExpMonth, fmt.Errorf("unknown expiration month: %s", s)
+	return UnknownExpMonth, fmt.Errorf("unknown expiration month: %q", s)
+}
+
+func FromInt(i int) (ExpirationMonth, error) {
+	switch i {
+	case janInt:
+		return January, nil
+	case febInt:
+		return February, nil
+	case marInt:
+		return March, nil
+	case aprInt:
+		return April, nil
+	case mayInt:
+		return May, nil
+	case junInt:
+		return June, nil
+	case julInt:
+		return July, nil
+	case augInt:
+		return August, nil
+	case sepInt:
+		return September, nil
+	case octInt:
+		return October, nil
+	case novInt:
+		return November, nil
+	case decInt:
+		return December, nil
+	}
+
+	return UnknownExpMonth, fmt.Errorf("unknown expiration month: %q", i)
 }
 
 const (
@@ -132,6 +181,15 @@ const (
 	janInt, janStr = iota, "01"
 	febInt, febStr = iota, "02"
 	marInt, marStr = iota, "03"
+	aprInt, aprStr = iota, "04"
+	mayInt, mayStr = iota, "05"
+	junInt, junStr = iota, "06"
+	julInt, julStr = iota, "07"
+	augInt, augStr = iota, "08"
+	sepInt, sepStr = iota, "09"
+	octInt, octStr = iota, "10"
+	novInt, novStr = iota, "11"
+	decInt, decStr = iota, "12"
 )
 
 var (
@@ -139,4 +197,13 @@ var (
 	January         = ExpirationMonth{janInt, janStr}
 	February        = ExpirationMonth{febInt, febStr}
 	March           = ExpirationMonth{marInt, marStr}
+	April           = ExpirationMonth{aprInt, aprStr}
+	May             = ExpirationMonth{mayInt, mayStr}
+	June            = ExpirationMonth{junInt, junStr}
+	July            = ExpirationMonth{julInt, julStr}
+	August          = ExpirationMonth{augInt, augStr}
+	September       = ExpirationMonth{sepInt, sepStr}
+	October         = ExpirationMonth{octInt, octStr}
+	November        = ExpirationMonth{novInt, novStr}
+	December        = ExpirationMonth{decInt, decStr}
 )
