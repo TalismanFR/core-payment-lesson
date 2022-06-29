@@ -2,7 +2,7 @@ package terminal
 
 import (
 	"context"
-	"diLesson/application/domain/vo"
+	"diLesson/application/domain/terminal"
 	"fmt"
 	"github.com/google/uuid"
 	vault "github.com/hashicorp/vault/api"
@@ -24,7 +24,7 @@ func NewVault(mountPath string) (*Vault, error) {
 	return &Vault{mountPath: mountPath, c: c}, nil
 }
 
-func (v Vault) FindByUuid(ctx context.Context, terminalUuid uuid.UUID) (*vo.Terminal, error) {
+func (v Vault) FindByUuid(ctx context.Context, terminalUuid uuid.UUID) (*terminal.Terminal, error) {
 	s, err := v.c.KVv2(v.mountPath).Get(ctx, terminalUuid.String())
 
 	if err != nil {
@@ -49,5 +49,5 @@ func (v Vault) FindByUuid(ctx context.Context, terminalUuid uuid.UUID) (*vo.Term
 		}
 	}
 
-	return vo.NewTerminal(terminalUuid, alias, additionalData), nil
+	return terminal.NewTerminal(terminalUuid, alias, additionalData), nil
 }

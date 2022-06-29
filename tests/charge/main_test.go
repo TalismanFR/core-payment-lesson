@@ -3,7 +3,7 @@ package charge
 import (
 	"diLesson/application/contract"
 	"diLesson/application/contract/dto"
-	"diLesson/application/domain/vo"
+	"diLesson/application/domain/credit_card"
 	"diLesson/config"
 	"diLesson/pkg/vault"
 	"github.com/golobby/container/v3"
@@ -61,6 +61,10 @@ func TestCharge_Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	if len(uuids) == 0 {
+		t.Fatal("uuids slice is empty")
+	}
+
 	// Uuids order is similar to order in terminals.json
 	// Extract first terminal uuid (bepaid for now)
 	terminalId := uuids[0]
@@ -71,9 +75,12 @@ func TestCharge_Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	conf := config.Parse(p)
+	conf, err := config.Parse(p)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	// TODO:sometimes test fail without time.Sleep
+	// TODO: sometimes test fail without time.Sleep
 	//time.Sleep(5 * time.Second)
 
 	err = config.BuildDI(conf)
@@ -87,7 +94,7 @@ func TestCharge_Integration(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cc := vo.NewCreditCard("4200000000000000", "123", "tim", vo.January, "2024")
+	cc := credit_card.NewCreditCard("4200000000000000", "123", "tim", credit_card.January, "2024")
 
 	requestDto := *dto.NewChargeRequest(1000, "RUB", terminalId, "invoiceID1", "description", *cc)
 

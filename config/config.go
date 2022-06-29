@@ -63,11 +63,11 @@ type (
 	}
 )
 
-func Parse(filePath string) *Config {
+func Parse(filePath string) (*Config, error) {
 
 	f, err := os.Open(filePath)
 	if err != nil {
-		processError(err)
+		return nil, err
 	}
 
 	defer f.Close()
@@ -75,20 +75,15 @@ func Parse(filePath string) *Config {
 	cfg := &Config{}
 
 	if err := yaml.NewDecoder(f).Decode(cfg); err != nil {
-		processError(err)
+		return nil, err
 	}
 
 	err = envconfig.Process("", cfg)
 	if err != nil {
-		processError(err)
+		return nil, err
 	}
 
-	return cfg
-}
-
-func processError(err error) {
-	fmt.Println(err)
-	os.Exit(2)
+	return cfg, nil
 }
 
 func BuildDI(conf *Config) (err error) {

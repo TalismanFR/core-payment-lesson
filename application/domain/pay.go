@@ -1,9 +1,10 @@
 package domain
 
 import (
+	"diLesson/application/domain/credit_card"
 	"diLesson/application/domain/currency"
 	"diLesson/application/domain/status"
-	"diLesson/application/domain/vo"
+	"diLesson/application/domain/terminal"
 	"diLesson/payment/contract/dto"
 	"fmt"
 	"github.com/google/uuid"
@@ -21,11 +22,11 @@ type Pay struct {
 	status        status.Status
 	createdAt     time.Time
 	transactionId string
-	terminal      *vo.Terminal
-	creditCard    *vo.CreditCard
+	terminal      *terminal.Terminal
+	creditCard    *credit_card.CreditCard
 }
 
-func NewPay(uuid uuid.UUID, amount Amount, currency currency.Currency, description string, invoiceId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
+func NewPay(uuid uuid.UUID, amount Amount, currency currency.Currency, description string, invoiceId string, terminal *terminal.Terminal, cc *credit_card.CreditCard) (*Pay, error) {
 	if currency.String() == "" || invoiceId == "" {
 		return nil, fmt.Errorf("invalid arguments: empty string")
 	}
@@ -43,7 +44,7 @@ func NewPay(uuid uuid.UUID, amount Amount, currency currency.Currency, descripti
 	}, nil
 }
 
-func PayFull(uuid uuid.UUID, amount Amount, currency currency.Currency, description string, invoiceId string, status status.Status, createdAt time.Time, transactionId string, terminal *vo.Terminal, cc *vo.CreditCard) (*Pay, error) {
+func PayFull(uuid uuid.UUID, amount Amount, currency currency.Currency, description string, invoiceId string, status status.Status, createdAt time.Time, transactionId string, terminal *terminal.Terminal, cc *credit_card.CreditCard) (*Pay, error) {
 
 	p, err := NewPay(uuid, amount, currency, description, invoiceId, terminal, cc)
 	if err != nil {
@@ -102,10 +103,10 @@ func (p *Pay) IsStatusPending() bool {
 	return p.status == status.StatusPending
 }
 
-func (p *Pay) Terminal() *vo.Terminal {
+func (p *Pay) Terminal() *terminal.Terminal {
 	return p.terminal
 }
 
-func (p *Pay) CreditCard() *vo.CreditCard {
+func (p *Pay) CreditCard() *credit_card.CreditCard {
 	return p.creditCard
 }

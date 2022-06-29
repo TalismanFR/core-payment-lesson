@@ -5,7 +5,7 @@ import (
 	"diLesson/application/domain"
 	"diLesson/application/domain/currency"
 	"diLesson/application/domain/status"
-	"diLesson/application/domain/vo"
+	"diLesson/application/domain/terminal"
 	"fmt"
 	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
@@ -154,7 +154,7 @@ func domainPayFromPay(pay *Pay) (*domain.Pay, error) {
 		stat,
 		pay.CreatedAt,
 		pay.TransactionId,
-		vo.NewTerminal(terminalUuid, "", nil),
+		terminal.NewTerminal(terminalUuid, "", nil),
 		nil,
 	)
 

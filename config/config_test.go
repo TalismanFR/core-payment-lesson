@@ -3,7 +3,6 @@ package config
 import (
 	"github.com/google/go-cmp/cmp"
 	"gotest.tools/v3/env"
-	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -50,7 +49,7 @@ vault:
 	p, _ := filepath.Abs("cfg1.yaml")
 	f, err := os.CreateTemp(filepath.Dir(p), "cfg1.yaml")
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 
 	fileName := f.Name()
@@ -92,13 +91,16 @@ vault:
 	}
 
 	if _, err := f.Write([]byte(input)); err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	if err := f.Close(); err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 
-	cfg := Parse(fileName)
+	cfg, err := Parse(fileName)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if !cmp.Equal(er, *cfg) {
 		t.Log(cmp.Diff(er, *cfg))

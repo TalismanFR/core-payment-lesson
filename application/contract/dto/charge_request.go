@@ -1,20 +1,20 @@
 package dto
 
 import (
-	"diLesson/application/domain/vo"
+	"diLesson/application/domain/credit_card"
 	"fmt"
 )
 
 type ChargeRequest struct {
-	Amount      int
+	Amount      int64
 	Currency    string
 	TerminalId  string
 	InvoiceId   string
 	Description string
-	CreditCard  vo.CreditCard
+	CreditCard  credit_card.CreditCard
 }
 
-func NewChargeRequest(amount int, currency string, terminalId string, invoiceId string, description string, creditCard vo.CreditCard) *ChargeRequest {
+func NewChargeRequest(amount int64, currency string, terminalId string, invoiceId string, description string, creditCard credit_card.CreditCard) *ChargeRequest {
 	return &ChargeRequest{Amount: amount, Currency: currency, TerminalId: terminalId, InvoiceId: invoiceId, Description: description, CreditCard: creditCard}
 }
 

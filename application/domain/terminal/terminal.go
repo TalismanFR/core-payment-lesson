@@ -1,4 +1,4 @@
-package vo
+package terminal
 
 import "github.com/google/uuid"
 
