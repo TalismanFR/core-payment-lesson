@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package server;
+
+option go_package = "./server";
+
+service PayService {
+  rpc Charge(ChargeRequestMessage) returns (ChargeResponseMessage){}
+}
+
+message ChargeRequestMessage {
+  message CreditCard {
+    enum ExpMonth {
+      JAN = 0;
+      FEB = 1;
+      MAR = 2;
+      APR = 3;
+      MAY = 4;
+      JUN = 5;
+      JUL = 6;
+      AUG = 7;
+      SEP = 8;
+      OCT = 9;
+      NOV = 10;
+      DEC = 11;
+    }
+     string number = 1;
+     string verificationValue = 2;
+     string holder = 3;
+     ExpMonth expMonth = 4;
+     string expYear = 5;
+     string token = 6;
+     bool skipThreeDSecureVerification = 7;
+  }
+  int64 amount = 1;
+  string currency = 2;
+  string terminalId = 3;
+  string invoiceId = 4;
+  string description = 5;
+  CreditCard creditCard = 6;
+}
+
+
+
+message ChargeResponseMessage {
+  message ThreeDs {
+    string status = 1;
+    string redirectUrl = 2;
+  }
+  int32 statusCode = 1;
+  string statusName = 2;
+  string uuid = 3;
+  string receiptUrl = 4;
+  string message = 5;
+  ThreeDs threeDs = 6;
+}
+
