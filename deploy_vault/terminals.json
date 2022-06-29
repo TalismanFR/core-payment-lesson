@@ -1,0 +1,11 @@
+{
+  "bepaid": {
+    "url": "https://gateway.bepaid.by",
+    "shop_id": "id1",
+    "secret": "secret1"
+  },
+  "tinkoff": {
+    "shop_id": "tinkoff-id-1",
+    "secret": "tinkoff-secret-1"
+  }
+}

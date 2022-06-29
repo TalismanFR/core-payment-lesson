@@ -1,7 +1,7 @@
 #!/bin/sh
-echo $PWD
 docker run -d --rm \
-  --name server \
+  --name vault \
+  --net-alias vault \
   -v ${PWD}/vault.json:/vault/config/vault.json \
   -p "8200:8200" \
   -e VAULT_ADDR=http://0.0.0.0:8200 \
