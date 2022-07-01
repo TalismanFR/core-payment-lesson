@@ -26,6 +26,9 @@ func TestParse(t *testing.T) {
   readTimeout: 10s
   writeTimeout: 5s
 
+grpc:
+  port: 50051
+
 cache:
   ttl: 60s
 
@@ -45,6 +48,11 @@ postgres:
 
 vault:
   mountPath: terminals
+
+trace:
+  host: jaeger
+  grpcPort: 4317
+  httpPort: 4318
 `
 	p, _ := filepath.Abs("cfg1.yaml")
 	f, err := os.CreateTemp(filepath.Dir(p), "cfg1.yaml")
@@ -61,6 +69,10 @@ vault:
 			Port:         "8000",
 			ReadTimeout:  10 * time.Second,
 			WriteTimeout: 5 * time.Second,
+		},
+
+		Grpc: GrpcConfig{
+			Port: "50051",
 		},
 		Cache: CacheConfig{
 			Ttl: 60 * time.Second,
@@ -87,6 +99,12 @@ vault:
 
 		Vault: VaultConfig{
 			MountPath: "terminals",
+		},
+
+		Trace: TraceConfig{
+			Host:     "jaeger",
+			GrpcPort: "4317",
+			HttpPort: "4318",
 		},
 	}
 

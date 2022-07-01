@@ -3,6 +3,9 @@ http:
   readTimeout: 10s
   writeTimeout: 5s
 
+grpc:
+  port: 50051
+
 cache:
   ttl: 60s
 
@@ -22,3 +25,8 @@ postgres:
 
 vault:
   mountPath: terminals
+
+trace:
+  host: jaeger
+  grpcPort: 4317
+  httpPort: 4318

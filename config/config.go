@@ -20,17 +20,23 @@ import (
 type (
 	Config struct {
 		Http     HttpConfig     `yaml:"http"`
+		Grpc     GrpcConfig     `yaml:"grpc"`
 		Cache    CacheConfig    `yaml:"cache"`
 		Auth     AuthConfig     `yaml:"auth"`
 		Limiter  LimiterConfig  `yaml:"limiter"`
 		Postgres PostgresConfig `yaml:"postgres"`
 		Vault    VaultConfig    `yaml:"vault"`
+		Trace    TraceConfig    `yaml:"trace"`
 	}
 
 	HttpConfig struct {
 		Port         string
 		ReadTimeout  time.Duration `yaml:"readTimeout"`
 		WriteTimeout time.Duration `yaml:"writeTimeout"`
+	}
+
+	GrpcConfig struct {
+		Port string `yaml:"port"`
 	}
 
 	CacheConfig struct {
@@ -60,6 +66,12 @@ type (
 		DBName   string `yaml:"dbName"`
 		Port     string `envconfig:"POSTGRES_PORT"`
 		SslMode  string `yaml:"sslMode"`
+	}
+
+	TraceConfig struct {
+		Host     string `yaml:"host"`
+		GrpcPort string `yaml:"grpcPort"`
+		HttpPort string `yaml:"httpPort"`
 	}
 )
 
