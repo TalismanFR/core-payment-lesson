@@ -88,10 +88,10 @@ func (v Vault) Initialize() (map[string]string, error) {
 }
 
 // Populate decodes reader as json object and puts values in v.MountPath
-func (v *Vault) Populate(in io.ReadCloser) ([]string, error) {
+func (v *Vault) Populate(in io.ReadCloser) (map[string]string, error) {
 	defer in.Close()
 
-	var ids []string
+	uuids := map[string]string{}
 
 	m := map[string]interface{}{}
 
@@ -113,12 +113,12 @@ func (v *Vault) Populate(in io.ReadCloser) ([]string, error) {
 
 		creds["alias"] = alias
 		uid := uuid.New().String()
-		ids = append(ids, uid)
+		uuids[alias] = uid
 		_, err := v.c.KVv2(v.mountPath).Put(ctx, uid, creds)
 		if err != nil {
 			return nil, fmt.Errorf("unable to write secret: %w", err)
 		}
 	}
 
-	return ids, nil
+	return uuids, nil
 }
