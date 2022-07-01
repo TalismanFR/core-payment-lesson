@@ -58,8 +58,8 @@ func main() {
 	}
 
 	fmt.Println("UUIDS:")
-	for _, id := range uuids {
-		_, err := fmt.Printf("%s\n", id)
+	for alias, uuid := range uuids {
+		_, err := fmt.Printf("%s: %s\n", alias, uuid)
 		if err != nil {
 			log.Fatalf("open file %s error: %s\n", out, err)
 		}
