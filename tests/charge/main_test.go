@@ -1,6 +1,7 @@
 package charge
 
 import (
+	"context"
 	"diLesson/application/contract"
 	"diLesson/application/contract/dto"
 	"diLesson/application/domain/credit_card"
@@ -65,9 +66,7 @@ func TestCharge_Integration(t *testing.T) {
 		t.Fatal("uuids slice is empty")
 	}
 
-	// Uuids order is similar to order in terminals.json
-	// Extract first terminal uuid (bepaid for now)
-	terminalId := uuids[0]
+	terminalId := uuids["bepaid"]
 
 	// Build config
 	p, err := filepath.Abs("main.yaml")
@@ -100,7 +99,7 @@ func TestCharge_Integration(t *testing.T) {
 
 	t.Log("sending charge request")
 
-	result, err := service.Charge(requestDto)
+	result, err := service.Charge(context.Background(), requestDto)
 
 	t.Log(result)
 
