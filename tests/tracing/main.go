@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/mazitovt/core-payment-lesson/tests/tracing/lib"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"log"
 	"os"
@@ -51,18 +52,17 @@ func initProvider() (func(context.Context) error, error) {
 	}
 
 	// Set up a trace exporter
-	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
+	exporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create trace exporter: %w", err)
 	}
 
 	// Register the trace exporter with a TracerProvider, using a batch
 	// span processor to aggregate spans before export.
-	bsp := sdktrace.NewBatchSpanProcessor(traceExporter)
 	tracerProvider := sdktrace.NewTracerProvider(
 		sdktrace.WithSampler(sdktrace.AlwaysSample()),
 		sdktrace.WithResource(res),
-		sdktrace.WithSpanProcessor(bsp),
+		sdktrace.WithSpanProcessor(sdktrace.NewBatchSpanProcessor(exporter)),
 	)
 	otel.SetTracerProvider(tracerProvider)
 
@@ -72,13 +72,6 @@ func initProvider() (func(context.Context) error, error) {
 	// Shutdown will flush any remaining spans and shut down the exporter.
 	return tracerProvider.Shutdown, nil
 }
-
-//func main() {
-//	otlptracegrpc.
-//		otel.Tracer()
-//	tp := sdktrace.NewTracerProvider()
-//	otel.SetTracerProvider(tp)
-//}
 
 func main1() {
 	log.Printf("Waiting for connection...")
@@ -96,7 +89,7 @@ func main1() {
 		}
 	}()
 
-	tracer := otel.Tracer("test-tracer")
+	tracer1 := otel.Tracer("test-tracer1")
 
 	// Attributes represent additional key-value descriptors that can be bound
 	// to a metric observer or recorder.
@@ -107,13 +100,13 @@ func main1() {
 	}
 
 	// work begins
-	ctx, span := tracer.Start(
+	ctx, span := tracer1.Start(
 		ctx,
 		"CollectorExporter-Example",
 		trace.WithAttributes(commonAttrs...))
 	defer span.End()
 	for i := 0; i < 10; i++ {
-		_, iSpan := tracer.Start(ctx, fmt.Sprintf("Sample-%d", i))
+		_, iSpan := tracer1.Start(ctx, fmt.Sprintf("Sample-%d", i))
 		log.Printf("Doing really hard work (%d / 10)\n", i+1)
 
 		<-time.After(time.Second)
@@ -129,11 +122,15 @@ const (
 )
 
 var (
-	tracer = otel.GetTracerProvider().Tracer(
-		instrumentationName,
+	tracer = otel.Tracer(instrumentationName,
 		trace.WithInstrumentationVersion(instrumentationVersion),
 		trace.WithSchemaURL(semconv.SchemaURL),
 	)
+	//tracer = otel.GetTracerProvider().Tracer(
+	//	instrumentationName,
+	//	trace.WithInstrumentationVersion(instrumentationVersion),
+	//	trace.WithSchemaURL(semconv.SchemaURL),
+	//)
 )
 
 func add(ctx context.Context, x, y int64) int64 {
@@ -155,9 +152,10 @@ func multiply(ctx context.Context, x, y int64) int64 {
 }
 
 func newResource() *resource.Resource {
+
 	return resource.NewWithAttributes(
 		semconv.SchemaURL,
-		semconv.ServiceNameKey.String("otlptrace-example9"),
+		semconv.ServiceNameKey.String("otlptrace-example10"),
 		semconv.ServiceVersionKey.String("0.0.1"),
 	)
 }
@@ -194,7 +192,9 @@ func main() {
 	}()
 
 	ctx, sp := tracer.Start(ctx, "root_span")
-	res := add(ctx, multiply(ctx, multiply(ctx, 2, 2), 10), 2)
+	st := []string{"a", "b", "c", "d"}
+	for _, v := range st {
+		lib.DoSomething(ctx, v)
+	}
 	sp.End()
-	log.Println("the answer is", res)
 }
