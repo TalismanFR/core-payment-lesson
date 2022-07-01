@@ -1,6 +1,7 @@
 package tinkoff
 
 import (
+	"context"
 	"diLesson/application/domain"
 	"diLesson/payment/contract/dto"
 	"fmt"
@@ -9,8 +10,8 @@ import (
 type Charge struct {
 }
 
-func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
+func (c Charge) Charge(ctx context.Context, pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
-	fmt.Println("charge service tinkoff")
+	fmt.Println("UNIMPLEMENTED charge service tinkoff")
 	return &dto.VendorChargeResult{}, nil
 }

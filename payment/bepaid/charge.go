@@ -10,7 +10,23 @@ import (
 	sdkservice "github.com/TalismanFR/bepaid/service"
 	sdkvo "github.com/TalismanFR/bepaid/service/vo"
 	"github.com/golobby/container/v3"
+	"go.opentelemetry.io/otel"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
+	"go.opentelemetry.io/otel/trace"
 	"net/http"
+)
+
+const (
+	instrumentation        = "payment.bepaid.charge"
+	instrumentationVersion = "v0.0.1"
+)
+
+var (
+	tracer = otel.Tracer(
+		instrumentation,
+		trace.WithSchemaURL(semconv.SchemaURL),
+		trace.WithInstrumentationVersion(instrumentationVersion),
+	)
 )
 
 type Charge struct {
@@ -29,7 +45,10 @@ func authorizationRequestFromPay(pay *domain.Pay) *sdkvo.AuthorizationRequest {
 	return request
 }
 
-func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
+func (c Charge) Charge(ctx context.Context, pay *domain.Pay) (*dto.VendorChargeResult, error) {
+
+	ctx, span := tracer.Start(ctx, "Charge")
+	defer span.End()
 
 	// Get args for api service
 	var terminals application.TerminalRepo
@@ -38,7 +57,8 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 		return nil, err
 	}
 
-	terminal, err := terminals.FindByUuid(context.Background(), pay.Terminal().Uuid())
+	//TODO: remove FindByUuid call
+	terminal, err := terminals.FindByUuid(ctx, pay.Terminal().Uuid())
 	if err != nil {
 		return nil, fmt.Errorf("cannot extract shop credentials: %w", err)
 	}
@@ -52,7 +72,9 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
 	// Create auth request
 	ar := authorizationRequestFromPay(pay)
+	_, spanAuth := tracer.Start(ctx, "Authorizations")
 	resp, err := client.Authorizations(context.Background(), *ar)
+	spanAuth.End()
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +86,9 @@ func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 
 	// Create capture request
 	cr := sdkvo.NewCaptureRequest(uid, sdkvo.Amount(pay.Amount()))
+	_, spanCapt := tracer.Start(ctx, "Capture")
 	resp, err = client.Capture(context.Background(), *cr)
+	spanCapt.End()
 	if err != nil {
 		return nil, err
 	}

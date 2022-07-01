@@ -5,6 +5,22 @@ import (
 	"diLesson/application/contract"
 	"diLesson/application/contract/dto"
 	"diLesson/application/domain/credit_card"
+	"go.opentelemetry.io/otel"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
+	"go.opentelemetry.io/otel/trace"
+)
+
+const (
+	instrumentation        = "server"
+	instrumentationVersion = "v0.0.1"
+)
+
+var (
+	tracer = otel.Tracer(
+		instrumentation,
+		trace.WithSchemaURL(semconv.SchemaURL),
+		trace.WithInstrumentationVersion(instrumentationVersion),
+	)
 )
 
 type Server struct {
@@ -13,6 +29,10 @@ type Server struct {
 }
 
 func (s Server) Charge(ctx context.Context, message *ChargeRequestMessage) (*ChargeResponseMessage, error) {
+
+	// TODO: replace with ctx
+	ctx, span := tracer.Start(context.Background(), "charge request")
+	defer span.End()
 
 	messageCC := message.GetCreditCard()
 
@@ -27,7 +47,7 @@ func (s Server) Charge(ctx context.Context, message *ChargeRequestMessage) (*Cha
 
 	chargeRequest := *dto.NewChargeRequest(message.GetAmount(), message.GetCurrency(), message.GetTerminalId(), message.GetInvoiceId(), message.GetDescription(), *cc)
 
-	chargeResult, err := s.chargeService.Charge(chargeRequest)
+	chargeResult, err := s.chargeService.Charge(ctx, chargeRequest)
 
 	if err != nil {
 		return nil, err

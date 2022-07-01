@@ -6,6 +6,22 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	vault "github.com/hashicorp/vault/api"
+	"go.opentelemetry.io/otel"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
+	"go.opentelemetry.io/otel/trace"
+)
+
+const (
+	instrumentation        = "infrastructure.terminal.vault"
+	instrumentationVersion = "v0.0.1"
+)
+
+var (
+	tracer = otel.Tracer(
+		instrumentation,
+		trace.WithSchemaURL(semconv.SchemaURL),
+		trace.WithInstrumentationVersion(instrumentationVersion),
+	)
 )
 
 type Vault struct {
@@ -25,6 +41,10 @@ func NewVault(mountPath string) (*Vault, error) {
 }
 
 func (v Vault) FindByUuid(ctx context.Context, terminalUuid uuid.UUID) (*terminal.Terminal, error) {
+
+	ctx, span := tracer.Start(ctx, "FindByUuid")
+	defer span.End()
+
 	s, err := v.c.KVv2(v.mountPath).Get(ctx, terminalUuid.String())
 
 	if err != nil {

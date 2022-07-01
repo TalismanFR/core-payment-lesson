@@ -10,10 +10,26 @@ import (
 	"fmt"
 	"github.com/golobby/container/v3"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
+	"go.opentelemetry.io/otel/trace"
 )
 
 const (
 	chargeSuffix = "_charge"
+)
+
+const (
+	instrumentation        = "application.service.charge"
+	instrumentationVersion = "v0.0.1"
+)
+
+var (
+	tracer = otel.Tracer(
+		instrumentation,
+		trace.WithSchemaURL(semconv.SchemaURL),
+		trace.WithInstrumentationVersion(instrumentationVersion),
+	)
 )
 
 type Charge struct {
@@ -21,7 +37,10 @@ type Charge struct {
 	terminalRepo application.TerminalRepo  `container:"type"`
 }
 
-func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
+func (c Charge) Charge(ctx context.Context, request dto.ChargeRequest) (*dto.ChargeResult, error) {
+
+	ctx, span := tracer.Start(ctx, "Charge")
+	defer span.End()
 
 	if err := request.Valid(); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
@@ -37,7 +56,7 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 		return nil, err
 	}
 
-	terminal, err := c.terminalRepo.FindByUuid(context.Background(), uuidTerminal)
+	terminal, err := c.terminalRepo.FindByUuid(ctx, uuidTerminal)
 	if err != nil {
 		return nil, err
 	}
@@ -53,14 +72,14 @@ func (c Charge) Charge(request dto.ChargeRequest) (*dto.ChargeResult, error) {
 		return nil, err
 	}
 
-	result, err := vendor.Charge(pay)
+	result, err := vendor.Charge(ctx, pay)
 	if err != nil {
 		return nil, err
 	}
 
 	pay.HandleChargeResult(result)
 
-	err = c.payRepo.Save(context.Background(), pay)
+	err = c.payRepo.Save(ctx, pay)
 	if err != nil {
 		return nil, err
 	}

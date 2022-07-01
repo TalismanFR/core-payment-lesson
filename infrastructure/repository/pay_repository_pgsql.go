@@ -8,12 +8,28 @@ import (
 	"diLesson/application/domain/terminal"
 	"fmt"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
+	"go.opentelemetry.io/otel/trace"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"time"
 )
 
 //TODO: add transaction
+
+const (
+	instrumentation        = "infrastructure.repository.pay_repository_pgsql"
+	instrumentationVersion = "v0.0.1"
+)
+
+var (
+	tracer = otel.Tracer(
+		instrumentation,
+		trace.WithSchemaURL(semconv.SchemaURL),
+		trace.WithInstrumentationVersion(instrumentationVersion),
+	)
+)
 
 type Pay struct {
 	Uuid          uuid.UUID `gorm:"primaryKey"`
@@ -46,6 +62,11 @@ func NewPayRepositoryPgsql(dsn string) (*PayRepositoryPgsql, error) {
 }
 
 func (repo *PayRepositoryPgsql) Save(ctx context.Context, pay *domain.Pay) error {
+
+	ctx, span := tracer.Start(ctx, "Save")
+	defer span.End()
+
+	// TODO: possible wrong context
 	tx := repo.db.WithContext(ctx)
 	r := tx.Create(payFromDomainPay(pay))
 
@@ -53,6 +74,11 @@ func (repo *PayRepositoryPgsql) Save(ctx context.Context, pay *domain.Pay) error
 }
 
 func (repo *PayRepositoryPgsql) Update(ctx context.Context, pay *domain.Pay) error {
+
+	ctx, span := tracer.Start(ctx, "Update")
+	defer span.End()
+
+	// TODO: possible wrong context
 	tx := repo.db.WithContext(ctx)
 
 	p := payFromDomainPay(pay)
@@ -68,10 +94,14 @@ func (repo *PayRepositoryPgsql) Update(ctx context.Context, pay *domain.Pay) err
 
 func (repo *PayRepositoryPgsql) FindByInvoiceID(ctx context.Context, invoiceId string) (*domain.Pay, error) {
 
+	ctx, span := tracer.Start(ctx, "FindByInvoiceID")
+	defer span.End()
+
 	if invoiceId == "" {
 		return nil, fmt.Errorf("empty invoiceId")
 	}
 
+	// TODO: possible wrong context
 	tx := repo.db.WithContext(ctx)
 
 	var pay *Pay
@@ -92,10 +122,14 @@ func (repo *PayRepositoryPgsql) FindByInvoiceID(ctx context.Context, invoiceId s
 
 func (repo *PayRepositoryPgsql) FindByUuid(ctx context.Context, uuid uuid.UUID) (*domain.Pay, error) {
 
+	ctx, span := tracer.Start(ctx, "FindByUuid")
+	defer span.End()
+
 	if uuid.String() == "" {
 		return nil, fmt.Errorf("uuid with zero length")
 	}
 
+	// TODO: possible wrong context
 	tx := repo.db.WithContext(ctx)
 
 	var pay *Pay
