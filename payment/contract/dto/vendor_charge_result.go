@@ -11,6 +11,14 @@ type VendorChargeResult struct {
 	threeDs       *VendorThreeDs
 }
 
+func (v VendorChargeResult) TransactionId() string {
+	return v.transactionId
+}
+
+func (v VendorChargeResult) Status() VendorChargeStatus {
+	return v.status
+}
+
 func (v VendorChargeResult) ThreeDs() *VendorThreeDs {
 	return v.threeDs
 }

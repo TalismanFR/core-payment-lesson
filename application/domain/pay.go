@@ -59,6 +59,7 @@ func PayFull(uuid uuid.UUID, amount Amount, currency currency.Currency, descript
 }
 
 func (p *Pay) HandleChargeResult(result *dto.VendorChargeResult) {
+	p.transactionId = result.TransactionId()
 	result.IsFailed()
 	//p.status=400
 }
