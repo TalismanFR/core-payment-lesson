@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 docker run -d --rm \
   --name vault \
   --net-alias vault \
