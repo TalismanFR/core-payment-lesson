@@ -2,3 +2,4 @@
 /.bin
 /.terminals
 /.idea/
+/deploy_vault/terminals.json
