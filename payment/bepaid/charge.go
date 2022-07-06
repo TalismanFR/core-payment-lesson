@@ -2,14 +2,12 @@ package bepaid
 
 import (
 	"context"
-	"diLesson/application"
 	"diLesson/application/domain"
 	"diLesson/payment/contract/dto"
 	"fmt"
 	sdkapi "github.com/TalismanFR/bepaid/api"
 	sdkservice "github.com/TalismanFR/bepaid/service"
 	sdkvo "github.com/TalismanFR/bepaid/service/vo"
-	"github.com/golobby/container/v3"
 	"go.opentelemetry.io/otel"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
@@ -50,20 +48,7 @@ func (c Charge) Charge(ctx context.Context, pay *domain.Pay) (*dto.VendorChargeR
 	ctx, span := tracer.Start(ctx, "Charge")
 	defer span.End()
 
-	// Get args for api service
-	var terminals application.TerminalRepo
-	err := container.Resolve(&terminals)
-	if err != nil {
-		return nil, err
-	}
-
-	//TODO: remove FindByUuid call
-	terminal, err := terminals.FindByUuid(ctx, pay.Terminal().Uuid())
-	if err != nil {
-		return nil, fmt.Errorf("cannot extract shop credentials: %w", err)
-	}
-
-	shopId, secret, url, err := readTerminalSecrets(terminal.AdditionalParams())
+	shopId, secret, url, err := readTerminalSecrets(pay.Terminal().AdditionalParams())
 	if err != nil {
 		return nil, err
 	}
