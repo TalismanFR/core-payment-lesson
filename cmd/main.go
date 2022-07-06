@@ -83,9 +83,6 @@ func main() {
 
 	log.Println("tracing configuration: end")
 
-	// TODO:sometimes test fail without time.Sleep
-	//time.Sleep(5 * time.Second)
-
 	log.Println("building dependencies: start")
 	err = config.BuildDI(conf)
 	if err != nil {

@@ -30,7 +30,7 @@ type Server struct {
 
 func (s Server) Charge(ctx context.Context, message *ChargeRequestMessage) (*ChargeResponseMessage, error) {
 
-	// TODO: replace with ctx
+	// TODO: how to properly replace with ctx
 	ctx, span := tracer.Start(context.Background(), "charge request")
 	defer span.End()
 

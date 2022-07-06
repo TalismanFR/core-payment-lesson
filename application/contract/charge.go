@@ -6,6 +6,5 @@ import (
 )
 
 type Charge interface {
-	//TODO: add context
 	Charge(ctx context.Context, request dto.ChargeRequest) (*dto.ChargeResult, error)
 }

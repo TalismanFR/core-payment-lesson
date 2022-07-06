@@ -26,7 +26,7 @@ func main() {
 	req := server.ChargeRequestMessage{
 		Amount:      1000,
 		Currency:    "RUB",
-		TerminalId:  "4a92cc1c-d381-4d16-92f6-55925490614a",
+		TerminalId:  "50754f30-83e4-4960-8424-5b010c5ed617",
 		InvoiceId:   "invoiceID1",
 		Description: "my_description",
 		CreditCard:  &cc,
