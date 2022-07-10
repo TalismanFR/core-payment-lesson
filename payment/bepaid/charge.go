@@ -11,13 +11,20 @@ import (
 
 type Charge struct {
 	api  contracts.Api
-	Card vo.CreditCard
+	card vo.CreditCard
+}
+
+func NewCharge(a contracts.Api, card vo.CreditCard) *Charge {
+	return &Charge{
+		api:  a,
+		card: card,
+	}
 }
 
 func (c Charge) Charge(pay *domain.Pay) (*dto.VendorChargeResult, error) {
 	serv := service.NewApiService(c.api)
-	// not descriptions
-	tokenAuth := vo.NewAuthorizationRequest(int64(pay.Amount()), pay.Currency().String(), "", pay.TransactionId(), false, c.Card)
+
+	tokenAuth := vo.NewAuthorizationRequest(int64(pay.Amount()), pay.Currency(), "", pay.Transaction(), false, c.card)
 	authorizationRequest, err := serv.Authorizations(context.Background(), *tokenAuth)
 	if err != nil {
 		return nil, err

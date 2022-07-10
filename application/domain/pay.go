@@ -15,6 +15,7 @@ type Pay struct {
 	status      string
 	createdAt   time.Time
 	transaction string
+	terminal    *Terminal
 }
 
 func (p *Pay) HandleChargeResult(result *dto.VendorChargeResult) {
@@ -52,6 +53,10 @@ func (p Pay) CreatedAt() time.Time {
 
 func (p Pay) Transaction() string {
 	return p.transaction
+}
+
+func (p *Pay) Terminal() *Terminal {
+	return p.terminal
 }
 
 func NewPay(uuid uuid.UUID, amount int, currency string, invoiceId string, statusCode int, status string, createdAt time.Time, transaction string) *Pay {
