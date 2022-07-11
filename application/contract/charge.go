@@ -1,7 +1,10 @@
 package contract
 
-import "diLesson/application/contract/dto"
+import (
+	"context"
+	"diLesson/application/contract/dto"
+)
 
 type Charge interface {
-	Charge(request dto.ChargeRequest) (*dto.ChargeResult, error)
+	Charge(ctx context.Context, request dto.ChargeRequest) (*dto.ChargeResult, error)
 }

@@ -1,0 +1,24 @@
+http:
+  port: 8000
+  readTimeout: 10s
+  writeTimeout: 5s
+
+cache:
+  ttl: 60s
+
+auth:
+  accessTokenTTL: 2h
+  refreshTokenTTL: 720h #30 days
+  verificationCodeLength: 8
+
+limiter:
+  rps: 10
+  burst: 20
+  ttl: 5m
+
+postgres:
+  dbName: payservice-db
+  sslMode: disable
+
+vault:
+  mountPath: terminals

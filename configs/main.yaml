@@ -1,0 +1,32 @@
+http:
+  port: 8000
+  readTimeout: 10s
+  writeTimeout: 5s
+
+grpc:
+  port: 50051
+
+cache:
+  ttl: 60s
+
+auth:
+  accessTokenTTL: 2h
+  refreshTokenTTL: 720h #30 days
+  verificationCodeLength: 8
+
+limiter:
+  rps: 10
+  burst: 20
+  ttl: 5m
+
+postgres:
+  dbName: payservice-db
+  sslMode: disable
+
+vault:
+  mountPath: terminals
+
+trace:
+  host: jaeger
+  grpcPort: 4317
+  httpPort: 4318
