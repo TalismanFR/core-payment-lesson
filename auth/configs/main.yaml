@@ -1,0 +1,13 @@
+jwt:
+  accessTokenTTL: 2h
+  refreshTokenTTL: 720h #30 days
+
+grpc:
+  port: 50051
+
+kafka:
+  host: kafka
+  port:
+  group:
+  topic:
+  partition:
