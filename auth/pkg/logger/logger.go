@@ -1,6 +1,9 @@
 package logger
 
-import "log"
+import (
+	"errors"
+	"log"
+)
 
 type Logger interface {
 	Debug(format string, v ...any)
@@ -58,4 +61,14 @@ func (m *MyLogger) Error(format string, v ...any) {
 		return
 	}
 	m.l.Printf("[ERROR] "+format, v...)
+}
+
+func LevelFromString(s string) (Level, error) {
+	switch s {
+	case "debug":
+		return Debug, nil
+	default:
+		return Debug, errors.New("unknown logger level")
+
+	}
 }

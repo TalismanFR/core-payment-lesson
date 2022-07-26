@@ -39,7 +39,18 @@ kafka:
 postgres:
   host: postgres
   port: 5555
+  user: authservice
+  password: authservice
 
+redis:
+  host: redis
+  port: 5555
+  password: redis-password
+  db: 0
+  expireIn: 10s
+
+logger:
+  level: debug
 `,
 			inputEnv: map[string]string{
 				"AUTH_POSTGRES_USER":     "authservice",
@@ -69,6 +80,16 @@ postgres:
 					Port:     "5555",
 					User:     "authservice",
 					Password: "authservice",
+				},
+				Redis: RedisConfig{
+					Host:     "redis",
+					Port:     "5555",
+					Password: "redis-password",
+					DB:       0,
+					ExpireIn: 10 * time.Second,
+				},
+				Logger: Logger{
+					Level: "debug",
 				},
 			},
 		},

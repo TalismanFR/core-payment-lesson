@@ -18,6 +18,7 @@ type (
 		Kafka    KafkaConfig
 		Postgres PostgresConfig `envconfig:"POSTGRES"`
 		Redis    RedisConfig    `envconfig:"REDIS"`
+		Logger   Logger
 	}
 
 	JWTConfig struct {
@@ -49,10 +50,15 @@ type (
 	}
 
 	RedisConfig struct {
-		Host     string `yaml:"host"`
-		Port     string `yaml:"port"`
-		Password string `envconfig:"PASSWORD"`
-		DB       int    `yaml:"db"`
+		ExpireIn time.Duration `yaml:"expireIn"`
+		Host     string        `yaml:"host"`
+		Port     string        `yaml:"port"`
+		Password string        `envconfig:"PASSWORD"`
+		DB       int           `yaml:"db"`
+	}
+
+	Logger struct {
+		Level string `yaml:"level"`
 	}
 )
 

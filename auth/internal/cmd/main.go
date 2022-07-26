@@ -2,19 +2,22 @@ package cmd
 
 import (
 	"auth/internal/auth/simple"
-	"auth/internal/cache/memory"
+	"auth/internal/cache/redis"
 	"auth/internal/config"
 	"auth/internal/repo/pg"
 	"auth/internal/server/v1"
 	"auth/pkg/logger"
 	"auth/pkg/token/jwt"
-	"time"
 )
 
 func Run(cfg *config.Config) error {
 
-	// TODO: add to config
-	l := logger.New(logger.Debug)
+	loggerLevel, err := logger.LevelFromString(cfg.Logger.Level)
+	if err != nil {
+		return err
+	}
+
+	l := logger.New(loggerLevel)
 
 	tokenAuthority, err := jwt.NewJWTokenAuthority(&cfg.JWT)
 	if err != nil {
@@ -26,9 +29,10 @@ func Run(cfg *config.Config) error {
 		return err
 	}
 
-	// TODO: add to config
-	cacheExpirationTime := 10 * time.Second
-	c := memory.New(cacheExpirationTime)
+	c, err := redis.New(&cfg.Redis, logger.New(loggerLevel))
+	if err != nil {
+		return err
+	}
 
 	a := simple.New(tokenAuthority, repo, c, l)
 
